@@ -69,6 +69,20 @@
       <p class="url">{{company.url}}</p>
       <p class="desc">{{company.desc}}</p>
     </section>
+
+    <section class="card-2">
+      <h2>Members</h2>
+      <table class="members">
+        <thead>
+          <tr><th class="name-col">Name</th><th class="name-col">Orgzanization</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+          {{#memberList}}
+          <tr on-click="memberClicked:{{.}}"><td>{{name}}</td><td>{{organization}}</td><td>{{email}}</td></tr>
+          {{/}}
+        </tbody>
+      </table>
+    </section>
   </script>
 
   <script id="MemberListTemplate" type="text/ractive">

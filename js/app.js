@@ -80,21 +80,35 @@ var CompanyDetailPage = (function () {
         this.id = id;
     }
     CompanyDetailPage.prototype.onCreate = function () {
+        var _this = this;
         var company = {
             'name': 'Kii',
             'url': 'htps://jp.kii.com',
             'thumbnail': 'https://jp.kii.com/common/images/Kii-logo.png',
             'desc': 'Sample description'
         };
+        var memberList = [
+            { 'name': 'fkm', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
+            { 'name': 'moke', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
+        ];
         this.ractive = new Ractive({
             el: '#container',
             template: '#CompanyDetailTemplate',
             data: {
-                company: company
+                company: company,
+                memberList: memberList
+            }
+        });
+        this.ractive.on({
+            memberClicked: function (e, member) {
+                _this.showDetail(member);
             }
         });
         this.app.setDrawerEnabled(false);
         this.app.showBackButton();
+    };
+    CompanyDetailPage.prototype.showDetail = function (member) {
+        app.navigate('/members/' + member.id);
     };
     return CompanyDetailPage;
 })();
