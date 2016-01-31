@@ -14,10 +14,13 @@
 
   <script id="headerTemplate" type="text/ractive">
     {{#if navDrawerEnabled}}
+    <!--
     <label for="menu-checkbox" id="menu-button">&#8801;</label>
+    -->
+    <label for="menu-checkbox"><img src="./img/menu.png" id="menu-button"/></label>
     {{/if}}
     {{#if showBackButton}}
-    <label id="menu-button" on-click="back">&larr;</label>
+    <img src="./img/arrow_back.png" id="menu-button" on-click="back"/>
     {{/if}}
     <h1 class="title">{{title}}</h1>
   </script>
@@ -53,10 +56,19 @@
     </thead>
     <tbody>
     {{#list}}
-    <tr><td>{{name}}</td><td>{{url}}</td></tr>
+    <tr on-click="companyClicked:{{.}}"><td>{{name}}</td><td>{{url}}</td></tr>
     {{/}}
     </tbody>
     </table>
+  </script>
+
+  <script id="CompanyDetailTemplate" type="text/ractive">
+    <section class="CompanyDetail card-2">
+      <img class="thumbnail" src="{{company.thumbnail}}"/>
+      <h2 class="name">{{company.name}}</h2>
+      <p class="url">{{company.url}}</p>
+      <p class="desc">{{company.desc}}</p>
+    </section>
   </script>
 
   <script id="MemberListTemplate" type="text/ractive">

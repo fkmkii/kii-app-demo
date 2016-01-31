@@ -27,12 +27,14 @@ body {
   border-bottom: 1px solid #cecece;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26); }
   #header #menu-button {
+    margin-top: 2px;
     color: #ffffff; }
   #header .title {
     display: inline-block;
     color: #ffffff;
     height: 40px;
-    line-height: 40px; }
+    line-height: 40px;
+    vertical-align: top; }
 
 #container {
   position: absolute;
@@ -164,6 +166,19 @@ body {
     padding-right: 8px; }
   .companies .name-col {
     width: 1%; }
+
+/* Company Detail */
+.CompanyDetail {
+  margin: 16px 16px;
+  padding: 8px 16px; }
+  .CompanyDetail .thumbnail {
+    display: block;
+    width: 128px;
+    height: 128px; }
+  .CompanyDetail .url {
+    font-size: small; }
+  .CompanyDetail .desc {
+    margin-top: 16px; }
 
 /* members  */
 .members {

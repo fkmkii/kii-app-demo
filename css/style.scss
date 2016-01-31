@@ -37,13 +37,15 @@ body {
   border-bottom: 1px solid #cecece;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
   #menu-button {
-    color : $header-font-color;
+      margin-top : 2px;
+      color : $header-font-color;
   }
   .title {
       display : inline-block;
       color : $header-font-color;
       height : 40px;
       line-height : 40px;
+      vertical-align : top;
   }
 }
 
@@ -206,6 +208,23 @@ body {
     }
     .name-col {
         width : 1%;
+    }
+}
+
+/* Company Detail */
+.CompanyDetail {
+    margin : 16px 16px;
+    padding : 8px 16px;
+    .thumbnail {
+        display : block;
+        width : 128px;
+        height : 128px;
+    }
+    .url {
+        font-size : small;
+    }
+    .desc {
+        margin-top : 16px;
     }
 }
 

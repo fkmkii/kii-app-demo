@@ -20,7 +20,16 @@ class CompanyListPage implements Page {
                 list : data
             }
         });
+        this.ractive.on({
+            companyClicked : (e : any, company : any) => {
+                this.showDetail(company);
+            }            
+        });
         this.app.setDrawerEnabled(true);
         this.app.setTitle('企業');
+    }
+
+    private showDetail(company : any) {
+        app.navigate('/companies/' + company.id);
     }
 }

@@ -3,6 +3,7 @@
 /// <reference path="./TopPage.ts"/>
 /// <reference path="./ConferenceListPage.ts"/>
 /// <reference path="./CompanyListPage.ts"/>
+/// <reference path="./CompanyDetailPage.ts"/>
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./Application.ts"/>
@@ -17,6 +18,7 @@ var AppRouter = Backbone.Router.extend({
         "" : "top",
         "conferences" : "conferences",
         "companies" : "companies",
+        "companies(/:id)" : "companyDetail",
         "members" : "members",
         "members(/:id)" : "memberDetail",
     },
@@ -30,6 +32,10 @@ var AppRouter = Backbone.Router.extend({
     },
     companies : () => {
         app.page = new CompanyListPage(app);
+        app.page.onCreate();
+    },
+    companyDetail : (id : string) => {
+        app.page = new CompanyDetailPage(app, id);
         app.page.onCreate();
     },
     members : () => {

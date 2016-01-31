@@ -47,6 +47,7 @@ var CompanyListPage = (function () {
         this.app = app;
     }
     CompanyListPage.prototype.onCreate = function () {
+        var _this = this;
         var data = [
             { 'name': 'Kii', 'url': 'https://jp.kii.com/' },
             { 'name': 'Mokelab', 'url': 'http://mokelab.com' },
@@ -60,10 +61,42 @@ var CompanyListPage = (function () {
                 list: data
             }
         });
+        this.ractive.on({
+            companyClicked: function (e, company) {
+                _this.showDetail(company);
+            }
+        });
         this.app.setDrawerEnabled(true);
         this.app.setTitle('企業');
     };
+    CompanyListPage.prototype.showDetail = function (company) {
+        app.navigate('/companies/' + company.id);
+    };
     return CompanyListPage;
+})();
+var CompanyDetailPage = (function () {
+    function CompanyDetailPage(app, id) {
+        this.app = app;
+        this.id = id;
+    }
+    CompanyDetailPage.prototype.onCreate = function () {
+        var company = {
+            'name': 'Kii',
+            'url': 'htps://jp.kii.com',
+            'thumbnail': 'https://jp.kii.com/common/images/Kii-logo.png',
+            'desc': 'Sample description'
+        };
+        this.ractive = new Ractive({
+            el: '#container',
+            template: '#CompanyDetailTemplate',
+            data: {
+                company: company
+            }
+        });
+        this.app.setDrawerEnabled(false);
+        this.app.showBackButton();
+    };
+    return CompanyDetailPage;
 })();
 var MemberListPage = (function () {
     function MemberListPage(app) {
@@ -204,6 +237,7 @@ var Application = (function () {
 /// <reference path="./TopPage.ts"/>
 /// <reference path="./ConferenceListPage.ts"/>
 /// <reference path="./CompanyListPage.ts"/>
+/// <reference path="./CompanyDetailPage.ts"/>
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./Application.ts"/>
@@ -213,6 +247,7 @@ var AppRouter = Backbone.Router.extend({
         "": "top",
         "conferences": "conferences",
         "companies": "companies",
+        "companies(/:id)": "companyDetail",
         "members": "members",
         "members(/:id)": "memberDetail"
     },
@@ -226,6 +261,10 @@ var AppRouter = Backbone.Router.extend({
     },
     companies: function () {
         app.page = new CompanyListPage(app);
+        app.page.onCreate();
+    },
+    companyDetail: function (id) {
+        app.page = new CompanyDetailPage(app, id);
         app.page.onCreate();
     },
     members: function () {
