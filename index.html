@@ -16,7 +16,7 @@
     {{#if navDrawerEnabled}}
     <label for="menu-checkbox" id="menu-button">&#8801;</label>
     {{/if}}
-    <label class="title">{{title}}</label>
+    <h1 class="title">{{title}}</h1>
   </script>
 
   <script id="drawerTemplate" type="text/ractive">
@@ -41,6 +41,19 @@
       <li><h2>{{title}}</h2><p>{{desc}}</p></li>
     {{/}}
     </ul>
+  </script>
+
+  <script id="CompanyListTemplate" type="text/ractive">
+    <table class="companies card-2">
+    <thead>
+      <tr><th class="name-col">Name</th><th>URL</th></tr>
+    </thead>
+    <tbody>
+    {{#list}}
+    <tr><td>{{name}}</td><td>{{url}}</td></tr>
+    {{/}}
+    </tbody>
+    </table>
   </script>
 
   <script src=".js/kiisdk.js"></script>

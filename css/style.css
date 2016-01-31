@@ -29,6 +29,7 @@ body {
   #header #menu-button {
     color: #ffffff; }
   #header .title {
+    display: inline-block;
     color: #ffffff;
     height: 40px;
     line-height: 40px; }
@@ -67,7 +68,11 @@ body {
 #menu-list {
   margin-top: 8px; }
   #menu-list li {
-    min-height: 48px; }
+    min-height: 48px;
+    line-height: 48px;
+    cursor: pointer; }
+    #menu-list li:hover {
+      background-color: #777777; }
 
 #menu-button {
   background-color: transparent;
@@ -95,6 +100,10 @@ body {
 #menu-checkbox:checked ~ #header #three-lines {
   position: relative;
   left: -3px; }
+
+/* Common */
+.card-2 {
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3); }
 
 .button-primary {
   background-color: #f69627;
@@ -133,3 +142,25 @@ body {
     padding: 8px; }
   .conference p {
     padding: 8px; }
+
+/* company  */
+.companies {
+  margin-left: 16px;
+  margin-right: 16px;
+  display: block;
+  padding: 8px 16px;
+  border-collapse: collapse; }
+  .companies thead tr {
+    border-bottom: solid 1px #777777; }
+    .companies thead tr th {
+      text-align: left; }
+  .companies tbody tr {
+    border-bottom: solid 1px #f7f7f7;
+    height: 44px; }
+    .companies tbody tr:hover {
+      background-color: #f7f7f7;
+      cursor: pointer; }
+  .companies tbody td {
+    padding-right: 8px; }
+  .companies .name-col {
+    width: 1%; }

@@ -2,6 +2,7 @@ $color-primary:#f69627;
 $color-background:#ffffff;
 $color-white: #ffffff;
 $color-light-gray: #f7f7f7;
+$color-dark-gray: #777777;
 $header-font-color:#ffffff;
 
 * {
@@ -39,9 +40,10 @@ body {
     color : $header-font-color;
   }
   .title {
-    color : $header-font-color;
-    height : 40px;
-    line-height : 40px;
+      display : inline-block;
+      color : $header-font-color;
+      height : 40px;
+      line-height : 40px;
   }
 }
 
@@ -83,6 +85,11 @@ body {
   margin-top: 8px;
   li {
       min-height: 48px;
+      line-height : 48px;
+      cursor: pointer;
+      &:hover {
+          background-color : $color-dark-gray;
+      }
   }
 }
 
@@ -114,6 +121,11 @@ body {
 #menu-checkbox:checked ~ #header #three-lines {
   position: relative;
   left: -3px;
+}
+
+/* Common */
+.card-2 {
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
 }
 
 .button-primary {
@@ -162,5 +174,37 @@ body {
     }
     p { 
         padding : 8px;
+    }
+}
+
+/* company  */
+
+.companies {
+    margin-left : 16px;
+    margin-right: 16px;    
+    display : block;
+    padding: 8px 16px;
+    border-collapse : collapse;
+    thead tr {
+        border-bottom : solid 1px $color-dark-gray;
+        th {
+            text-align : left;
+        }
+    }
+    tbody {
+        tr {
+            border-bottom : solid 1px $color-light-gray;
+            height : 44px;
+            &:hover {
+                background-color : $color-light-gray;
+                cursor : pointer; 
+            }
+        }
+        td {
+            padding-right : 8px;
+        }
+    }
+    .name-col {
+        width : 1%;
     }
 }

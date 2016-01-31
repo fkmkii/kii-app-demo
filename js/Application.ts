@@ -12,6 +12,10 @@ class Application {
                 navDrawerEnabled : true,
             },
         });
+        this.initDrawer();
+    }
+
+    private initDrawer() {
         this.drawer = new Ractive({
             el : '#menu',
             template : '#drawerTemplate',
@@ -25,6 +29,27 @@ class Application {
                 navDrawerEnabled : false
             }
         });
+        this.drawer.on({
+            menuClicked : (e : any, index : number) => {
+                this.closeDrawer();
+                this.showPage(index);
+            }
+        });
+    }
+
+    private closeDrawer() {
+        (<any>document.querySelector('#menu-checkbox')).checked = false;
+    }
+
+    private showPage(index : number) {
+        switch (index) {
+        case 0: // Conference
+            this.navigate('/conferences');
+            break;
+        case 1: // Companies
+            this.navigate('/companies');
+            break;
+        }
     }
    
     navigate(path : string) {
