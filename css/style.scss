@@ -208,3 +208,35 @@ body {
         width : 1%;
     }
 }
+
+/* company  */
+
+.members {
+    margin-left : 16px;
+    margin-right: 16px;    
+    display : block;
+    padding: 8px 16px;
+    border-collapse : collapse;
+    thead tr {
+        border-bottom : solid 1px $color-dark-gray;
+        th {
+            text-align : left;
+        }
+    }
+    tbody {
+        tr {
+            border-bottom : solid 1px $color-light-gray;
+            height : 44px;
+            &:hover {
+                background-color : $color-light-gray;
+                cursor : pointer; 
+            }
+        }
+        td {
+            padding-right : 8px;
+        }
+    }
+    .name-col {
+        width : 1%;
+    }
+}

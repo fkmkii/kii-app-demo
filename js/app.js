@@ -63,6 +63,26 @@ var CompanyListPage = (function () {
     };
     return CompanyListPage;
 })();
+var MemberListPage = (function () {
+    function MemberListPage(app) {
+        this.app = app;
+    }
+    MemberListPage.prototype.onCreate = function () {
+        var data = [
+            { 'name': 'fkm', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
+            { 'name': 'moke', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
+        ];
+        this.ractive = new Ractive({
+            el: '#container',
+            template: '#MemberListTemplate',
+            data: {
+                list: data
+            }
+        });
+        this.app.setDrawerEnabled(true);
+    };
+    return MemberListPage;
+})();
 var Application = (function () {
     function Application() {
     }
@@ -94,8 +114,8 @@ var Application = (function () {
         });
         this.drawer.on({
             menuClicked: function (e, index) {
-                _this.showPage(index);
                 _this.closeDrawer();
+                _this.showPage(index);
             }
         });
     };
@@ -109,6 +129,9 @@ var Application = (function () {
                 break;
             case 1:
                 this.navigate('/companies');
+                break;
+            case 2:
+                this.navigate('/members');
                 break;
         }
     };
@@ -125,13 +148,15 @@ var Application = (function () {
 /// <reference path="./TopPage.ts"/>
 /// <reference path="./ConferenceListPage.ts"/>
 /// <reference path="./CompanyListPage.ts"/>
+/// <reference path="./MemberListPage.ts"/>
 /// <reference path="./Application.ts"/>
 var app = new Application();
 var AppRouter = Backbone.Router.extend({
     routes: {
         "": "top",
         "conferences": "conferences",
-        "companies": "companies"
+        "companies": "companies",
+        "members": "members"
     },
     top: function () {
         app.page = new TopPage(app);
@@ -143,6 +168,10 @@ var AppRouter = Backbone.Router.extend({
     },
     companies: function () {
         app.page = new CompanyListPage(app);
+        app.page.onCreate();
+    },
+    members: function () {
+        app.page = new MemberListPage(app);
         app.page.onCreate();
     }
 });

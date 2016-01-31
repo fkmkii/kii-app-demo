@@ -49,6 +49,9 @@ class Application {
         case 1: // Companies
             this.navigate('/companies');
             break;
+        case 2: // Members
+            this.navigate('/members');
+            break;
         }
     }
    

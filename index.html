@@ -56,6 +56,19 @@
     </table>
   </script>
 
+  <script id="MemberListTemplate" type="text/ractive">
+    <table class="members card-2">
+    <thead>
+      <tr><th class="name-col">Name</th><th class="name-col">Orgzanization</th><th>Email</th></tr>
+    </thead>
+    <tbody>
+    {{#list}}
+    <tr><td>{{name}}</td><td>{{organization}}</td><td>{{email}}</td></tr>
+    {{/}}
+    </tbody>
+    </table>
+  </script>
+
   <script src=".js/kiisdk.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ractive/0.7.3/ractive.js"></script>
   <!-- for backbone.js -->

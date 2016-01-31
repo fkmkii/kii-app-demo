@@ -164,3 +164,25 @@ body {
     padding-right: 8px; }
   .companies .name-col {
     width: 1%; }
+
+/* company  */
+.members {
+  margin-left: 16px;
+  margin-right: 16px;
+  display: block;
+  padding: 8px 16px;
+  border-collapse: collapse; }
+  .members thead tr {
+    border-bottom: solid 1px #777777; }
+    .members thead tr th {
+      text-align: left; }
+  .members tbody tr {
+    border-bottom: solid 1px #f7f7f7;
+    height: 44px; }
+    .members tbody tr:hover {
+      background-color: #f7f7f7;
+      cursor: pointer; }
+  .members tbody td {
+    padding-right: 8px; }
+  .members .name-col {
+    width: 1%; }
