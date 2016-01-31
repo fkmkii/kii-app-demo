@@ -10,7 +10,13 @@ class Application {
             data : {
                 title : 'Kii consortium',
                 navDrawerEnabled : true,
+                showBackButton : false,
             },
+        });
+        this.header.on({
+            back : () => {
+                window.history.back();
+            }
         });
         this.initDrawer();
     }
@@ -61,5 +67,18 @@ class Application {
 
     setDrawerEnabled(value : boolean) {
         this.header.set('navDrawerEnabled', value);
+        if (value) {
+            this.header.set('showBackButton', false);
+        }
+    }
+
+    showBackButton() {
+        this.header.set('showBackButton', true);
+        this.header.set('navDrawerEnabled', false);
+    }
+
+    setTitle(value : string) {
+        if (value == null ) { value = 'Kii consortium'; }
+        this.header.set('title', value);
     }
 }

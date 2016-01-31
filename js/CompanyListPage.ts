@@ -21,5 +21,6 @@ class CompanyListPage implements Page {
             }
         });
         this.app.setDrawerEnabled(true);
+        this.app.setTitle('企業');
     }
 }

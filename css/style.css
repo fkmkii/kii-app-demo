@@ -165,7 +165,7 @@ body {
   .companies .name-col {
     width: 1%; }
 
-/* company  */
+/* members  */
 .members {
   margin-left: 16px;
   margin-right: 16px;
@@ -186,3 +186,19 @@ body {
     padding-right: 8px; }
   .members .name-col {
     width: 1%; }
+
+/* Member Detail */
+.MemberDetail {
+  margin: 16px 16px;
+  padding: 8px 16px; }
+  .MemberDetail .thumbnail {
+    display: block;
+    width: 128px;
+    height: 128px; }
+  .MemberDetail .name {
+    display: inline-block; }
+  .MemberDetail .email {
+    margin-left: 8px;
+    font-size: small; }
+  .MemberDetail .desc {
+    margin-top: 16px; }

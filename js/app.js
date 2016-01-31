@@ -38,6 +38,7 @@ var ConferenceListPage = (function () {
             }
         });
         this.app.setDrawerEnabled(true);
+        this.app.setTitle('カンファレンス');
     };
     return ConferenceListPage;
 })();
@@ -60,6 +61,7 @@ var CompanyListPage = (function () {
             }
         });
         this.app.setDrawerEnabled(true);
+        this.app.setTitle('企業');
     };
     return CompanyListPage;
 })();
@@ -68,6 +70,7 @@ var MemberListPage = (function () {
         this.app = app;
     }
     MemberListPage.prototype.onCreate = function () {
+        var _this = this;
         var data = [
             { 'name': 'fkm', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
             { 'name': 'moke', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
@@ -79,9 +82,43 @@ var MemberListPage = (function () {
                 list: data
             }
         });
+        this.ractive.on({
+            memberClicked: function (e, member) {
+                _this.showDetail(member);
+            }
+        });
         this.app.setDrawerEnabled(true);
+        this.app.setTitle('メンバー');
+    };
+    MemberListPage.prototype.showDetail = function (member) {
+        app.navigate('/members/' + member.id);
     };
     return MemberListPage;
+})();
+var MemberDetailPage = (function () {
+    function MemberDetailPage(app, id) {
+        this.app = app;
+        this.id = id;
+    }
+    MemberDetailPage.prototype.onCreate = function () {
+        var member = {
+            'name': 'fkm',
+            'organization': 'Mokelab',
+            'email': 'demo@mokelab.com',
+            'thumbnail': 'https://pbs.twimg.com/profile_images/693814056348585985/uB2GyQVW.png',
+            'desc': 'Sample description'
+        };
+        this.ractive = new Ractive({
+            el: '#container',
+            template: '#MemberDetailTemplate',
+            data: {
+                member: member
+            }
+        });
+        this.app.setDrawerEnabled(false);
+        this.app.showBackButton();
+    };
+    return MemberDetailPage;
 })();
 var Application = (function () {
     function Application() {
@@ -92,7 +129,13 @@ var Application = (function () {
             template: '#headerTemplate',
             data: {
                 title: 'Kii consortium',
-                navDrawerEnabled: true
+                navDrawerEnabled: true,
+                showBackButton: false
+            }
+        });
+        this.header.on({
+            back: function () {
+                window.history.back();
             }
         });
         this.initDrawer();
@@ -140,6 +183,19 @@ var Application = (function () {
     };
     Application.prototype.setDrawerEnabled = function (value) {
         this.header.set('navDrawerEnabled', value);
+        if (value) {
+            this.header.set('showBackButton', false);
+        }
+    };
+    Application.prototype.showBackButton = function () {
+        this.header.set('showBackButton', true);
+        this.header.set('navDrawerEnabled', false);
+    };
+    Application.prototype.setTitle = function (value) {
+        if (value == null) {
+            value = 'Kii consortium';
+        }
+        this.header.set('title', value);
     };
     return Application;
 })();
@@ -149,6 +205,7 @@ var Application = (function () {
 /// <reference path="./ConferenceListPage.ts"/>
 /// <reference path="./CompanyListPage.ts"/>
 /// <reference path="./MemberListPage.ts"/>
+/// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./Application.ts"/>
 var app = new Application();
 var AppRouter = Backbone.Router.extend({
@@ -156,7 +213,8 @@ var AppRouter = Backbone.Router.extend({
         "": "top",
         "conferences": "conferences",
         "companies": "companies",
-        "members": "members"
+        "members": "members",
+        "members(/:id)": "memberDetail"
     },
     top: function () {
         app.page = new TopPage(app);
@@ -172,6 +230,10 @@ var AppRouter = Backbone.Router.extend({
     },
     members: function () {
         app.page = new MemberListPage(app);
+        app.page.onCreate();
+    },
+    memberDetail: function (id) {
+        app.page = new MemberDetailPage(app, id);
         app.page.onCreate();
     }
 });

@@ -18,6 +18,16 @@ class MemberListPage implements Page {
                 list : data
             }
         });
+        this.ractive.on({
+            memberClicked : (e : any, member : any) => {
+                this.showDetail(member);
+            }
+        });
         this.app.setDrawerEnabled(true);
+        this.app.setTitle('メンバー');
+    }
+
+    private showDetail(member : any) {
+        app.navigate('/members/' + member.id);
     }
 }

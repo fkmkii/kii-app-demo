@@ -16,6 +16,9 @@
     {{#if navDrawerEnabled}}
     <label for="menu-checkbox" id="menu-button">&#8801;</label>
     {{/if}}
+    {{#if showBackButton}}
+    <label id="menu-button" on-click="back">&larr;</label>
+    {{/if}}
     <h1 class="title">{{title}}</h1>
   </script>
 
@@ -63,10 +66,18 @@
     </thead>
     <tbody>
     {{#list}}
-    <tr><td>{{name}}</td><td>{{organization}}</td><td>{{email}}</td></tr>
+    <tr on-click="memberClicked:{{.}}"><td>{{name}}</td><td>{{organization}}</td><td>{{email}}</td></tr>
     {{/}}
     </tbody>
     </table>
+  </script>
+
+  <script id="MemberDetailTemplate" type="text/ractive">
+    <section class="MemberDetail card-2">
+      <img class="thumbnail" src="{{member.thumbnail}}"/>
+      <div><h2 class="name">{{member.name}}</h2><span class="email">{{member.email}}</span></div>
+      <p class="desc">{{member.desc}}</p>
+    </section>
   </script>
 
   <script src=".js/kiisdk.js"></script>
