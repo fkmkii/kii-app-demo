@@ -194,10 +194,13 @@ var Application = (function () {
             template: '#drawerTemplate',
             data: {
                 menuItems: [
+                    "fkm",
                     "カンファレンス",
                     "企業",
                     "メンバー",
-                    "設定",
+                ],
+                companyList: [
+                    "Mokelab Inc",
                 ],
                 navDrawerEnabled: false
             }
@@ -215,13 +218,19 @@ var Application = (function () {
     Application.prototype.showPage = function (index) {
         switch (index) {
             case 0:
-                this.navigate('/conferences');
+                this.navigate('/account/edit');
                 break;
             case 1:
-                this.navigate('/companies');
+                this.navigate('/conferences');
                 break;
             case 2:
+                this.navigate('/companies');
+                break;
+            case 3:
                 this.navigate('/members');
+                break;
+            case 4:
+                this.navigate('/company/edit');
                 break;
         }
     };

@@ -27,10 +27,13 @@ class Application {
             template : '#drawerTemplate',
             data : {
                 menuItems : [
+                    "fkm",
                     "カンファレンス",
                     "企業",
                     "メンバー",
-                    "設定",
+                ],
+                companyList : [
+                    "Mokelab Inc",
                 ],
                 navDrawerEnabled : false
             }
@@ -49,14 +52,20 @@ class Application {
 
     private showPage(index : number) {
         switch (index) {
-        case 0: // Conference
+        case 0: // Edit profile
+            this.navigate('/account/edit');
+            break;
+        case 1: // Conference
             this.navigate('/conferences');
             break;
-        case 1: // Companies
+        case 2: // Companies
             this.navigate('/companies');
             break;
-        case 2: // Members
+        case 3: // Members
             this.navigate('/members');
+            break;
+        case 4: // Edit company
+            this.navigate('/company/edit');
             break;
         }
     }

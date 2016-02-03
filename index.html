@@ -27,11 +27,22 @@
   </script>
 
   <script id="drawerTemplate" type="text/ractive">
+    <section class="user-info">
+      <img class="thumbnail" src="https://pbs.twimg.com/profile_images/693814056348585985/uB2GyQVW.png"/>
+    </section>
     <ul id="menu-list">
     {{#menuItems:i}}
       <li on-click="menuClicked:{{i}}">{{.}}</li>
     {{/}}
     </ul>
+    <hr/>
+    <ul id="menu-list">
+    {{#companyList:i}}
+      <li on-click="companyClicked:{{i}}">{{.}}</li>
+    {{/}}
+    </ul>
+    <hr/>
+    <button class="button-logout">Log out</button>
   </script>
 
   <script id="TopTemplate" type="text/ractive">
