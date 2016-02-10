@@ -81,10 +81,32 @@ body {
   -webkit-transform: translate3d(-100%, 0, 0);
   transform: translate3d(-100%, 0, 0);
   padding: 10px;
+  .user-info {
+      .thumbnail {
+          display : block;
+          width : 120px;
+          height : 120px;
+          margin-left : auto;
+          margin-right : auto;
+          margin-top : 16px;
+      }
+  }
+  .button-logout {
+      display : block;
+      margin-top : 8px;
+      margin-left : auto;
+      margin-right : auto;
+      padding-left : 16px;
+      padding-right : 16px;
+      height : 48px;
+      background-color : $color-primary;
+      color : $color-white;
+  }
 }
 
 #menu-list {
   margin-top: 8px;
+  margin-bottom : 8px;
   li {
       min-height: 48px;
       line-height : 48px;
@@ -277,5 +299,34 @@ body {
     }
     .desc {
         margin-top : 16px;
+    }
+}
+
+/* Edit Account */
+.EditAccount {
+    padding : 8px 16px;
+    width : 600px;
+    margin-left : auto;
+    margin-right : auto;
+    ul {
+        list-style-type: none;
+    }
+    li {
+        min-height : 48px;
+        padding-right : 16px;
+        label {
+            display : inline-block;
+            width : 100px;
+        }
+        input {
+            width : calc(100% - 116px);
+            min-height : 40px;
+        }
+        textarea {
+            vertical-align : top;
+            width : calc(100% - 116px);
+            height : 64px;
+            resize : none;
+        }
     }
 }

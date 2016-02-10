@@ -167,6 +167,30 @@ var MemberDetailPage = (function () {
     };
     return MemberDetailPage;
 })();
+var EditAccountPage = (function () {
+    function EditAccountPage(app) {
+        this.app = app;
+    }
+    EditAccountPage.prototype.onCreate = function () {
+        var member = {
+            'name': 'fkm',
+            'organization': 'Mokelab',
+            'email': 'demo@mokelab.com',
+            'thumbnail': 'https://pbs.twimg.com/profile_images/693814056348585985/uB2GyQVW.png',
+            'desc': 'Sample description'
+        };
+        this.ractive = new Ractive({
+            el: '#container',
+            template: '#EditAccountTemplate',
+            data: {
+                member: member
+            }
+        });
+        this.app.setDrawerEnabled(false);
+        this.app.showBackButton();
+    };
+    return EditAccountPage;
+})();
 var Application = (function () {
     function Application() {
     }
@@ -194,10 +218,13 @@ var Application = (function () {
             template: '#drawerTemplate',
             data: {
                 menuItems: [
+                    "fkm",
                     "カンファレンス",
                     "企業",
                     "メンバー",
-                    "設定",
+                ],
+                companyList: [
+                    "Mokelab Inc",
                 ],
                 navDrawerEnabled: false
             }
@@ -215,13 +242,19 @@ var Application = (function () {
     Application.prototype.showPage = function (index) {
         switch (index) {
             case 0:
-                this.navigate('/conferences');
+                this.navigate('/account/edit');
                 break;
             case 1:
-                this.navigate('/companies');
+                this.navigate('/conferences');
                 break;
             case 2:
+                this.navigate('/companies');
+                break;
+            case 3:
                 this.navigate('/members');
+                break;
+            case 4:
+                this.navigate('/company/edit');
                 break;
         }
     };
@@ -254,6 +287,7 @@ var Application = (function () {
 /// <reference path="./CompanyDetailPage.ts"/>
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
+/// <reference path="./EditAccountPage.ts"/>
 /// <reference path="./Application.ts"/>
 var app = new Application();
 var AppRouter = Backbone.Router.extend({
@@ -263,7 +297,8 @@ var AppRouter = Backbone.Router.extend({
         "companies": "companies",
         "companies(/:id)": "companyDetail",
         "members": "members",
-        "members(/:id)": "memberDetail"
+        "members(/:id)": "memberDetail",
+        "account/edit": "editAccount"
     },
     top: function () {
         app.page = new TopPage(app);
@@ -287,6 +322,10 @@ var AppRouter = Backbone.Router.extend({
     },
     memberDetail: function (id) {
         app.page = new MemberDetailPage(app, id);
+        app.page.onCreate();
+    },
+    editAccount: function () {
+        app.page = new EditAccountPage(app);
         app.page.onCreate();
     }
 });
