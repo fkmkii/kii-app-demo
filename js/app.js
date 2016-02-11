@@ -66,26 +66,41 @@ var ConferenceListPage = (function () {
     };
     return ConferenceListPage;
 })();
+///<reference path="./Account.ts"/>
+var Company = (function () {
+    function Company() {
+    }
+    return Company;
+})();
+///<reference path="./Company.ts"/>
+///<reference path="./CompanyDAO.ts"/>
 var CompanyListPage = (function () {
-    function CompanyListPage(app) {
+    function CompanyListPage(app, companyDAO) {
         this.app = app;
+        this.companyDAO = companyDAO;
     }
     CompanyListPage.prototype.loginRequired = function () {
-        return false;
+        return true;
     };
     CompanyListPage.prototype.onCreate = function () {
         var _this = this;
-        var data = [
-            { 'name': 'Kii', 'url': 'https://jp.kii.com/' },
-            { 'name': 'Mokelab', 'url': 'http://mokelab.com' },
-            { 'name': 'Company1', 'url': 'http://mokelab.com' },
-            { 'name': 'Company2', 'url': 'http://mokelab.com' },
-        ];
+        this.app.setDrawerEnabled(true);
+        this.app.setTitle('企業');
+        this.companyDAO.getAll(function (e, list) {
+            if (e != null) {
+                return;
+            }
+            _this.list = list;
+            _this.onCreateView();
+        });
+    };
+    CompanyListPage.prototype.onCreateView = function () {
+        var _this = this;
         this.ractive = new Ractive({
             el: '#container',
             template: '#CompanyListTemplate',
             data: {
-                list: data
+                list: this.list
             }
         });
         this.ractive.on({
@@ -93,40 +108,58 @@ var CompanyListPage = (function () {
                 _this.showDetail(company);
             }
         });
-        this.app.setDrawerEnabled(true);
-        this.app.setTitle('企業');
     };
     CompanyListPage.prototype.showDetail = function (company) {
         app.navigate('/companies/' + company.id);
     };
     return CompanyListPage;
 })();
+///<reference path="./AccountDAO.ts"/>
+///<reference path="./CompanyDAO.ts"/>
 var CompanyDetailPage = (function () {
-    function CompanyDetailPage(app, id) {
+    function CompanyDetailPage(app, accountDAO, companyDAO, id) {
         this.app = app;
+        this.accountDAO = accountDAO;
+        this.companyDAO = companyDAO;
         this.id = id;
     }
     CompanyDetailPage.prototype.loginRequired = function () {
-        return false;
+        return true;
     };
     CompanyDetailPage.prototype.onCreate = function () {
         var _this = this;
-        var company = {
-            'name': 'Kii',
-            'url': 'htps://jp.kii.com',
-            'thumbnail': 'https://jp.kii.com/common/images/Kii-logo.png',
-            'desc': 'Sample description'
-        };
-        var memberList = [
-            { 'name': 'fkm', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
-            { 'name': 'moke', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
-        ];
+        this.companyDAO.getById(this.id, function (e, company) {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            _this.company = company;
+            _this.getMembers();
+        });
+    };
+    CompanyDetailPage.prototype.getMembers = function () {
+        var _this = this;
+        if (this.company.members != null) {
+            this.onCreateView();
+            return;
+        }
+        this.companyDAO.getMembers(this.company, this.accountDAO, function (e, company) {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            _this.company = company;
+            _this.onCreateView();
+        });
+    };
+    CompanyDetailPage.prototype.onCreateView = function () {
+        var _this = this;
         this.ractive = new Ractive({
             el: '#container',
             template: '#CompanyDetailTemplate',
             data: {
-                company: company,
-                memberList: memberList
+                company: this.company,
+                memberList: this.company.members
             }
         });
         this.ractive.on({
@@ -284,12 +317,12 @@ var AccountDAOImpl = (function () {
         });
     };
     AccountDAOImpl.prototype.getCurrentAccount = function (account, callback) {
+        var _this = this;
         var uri = 'kiicloud://buckets/account/objects/' + account.id;
         var obj = KiiObject.objectWithURI(uri);
         obj.refresh({
-            success: function (accountObj) {
-                account.name = accountObj.get('name');
-                account.thumbnailUrl = accountObj.get('thumbnail_url');
+            success: function (o) {
+                account = _this.toAccount(o);
                 // save access token
                 localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
                 callback(null, account);
@@ -298,6 +331,25 @@ var AccountDAOImpl = (function () {
                 callback(error, null);
             }
         });
+    };
+    AccountDAOImpl.prototype.getByIdList = function (idList, callback) {
+        var _this = this;
+        var bucket = Kii.bucketWithName('account');
+        var query = KiiQuery.queryWithClause(KiiClause.inClause('_id', idList));
+        var resultList = [];
+        var queryCallback = {
+            success: function (q, result, next) {
+                for (var i = 0; i < result.length; ++i) {
+                    var obj = result[i];
+                    resultList.push(_this.toAccount(obj));
+                }
+                callback(null, resultList);
+            },
+            failure: function (b, error) {
+                callback(error, null);
+            }
+        };
+        bucket.executeQuery(query, queryCallback);
     };
     AccountDAOImpl.prototype.update = function (account, name, thumbnail, description, callback) {
         var uri = 'kiicloud://buckets/account/objects/' + account.id;
@@ -317,7 +369,121 @@ var AccountDAOImpl = (function () {
             }
         }, true);
     };
+    AccountDAOImpl.prototype.toAccount = function (obj) {
+        var a = new Account();
+        a.id = obj.getUUID();
+        a.name = obj.get('name');
+        a.thumbnailUrl = obj.get('thumbnail_url');
+        return a;
+    };
     return AccountDAOImpl;
+})();
+///<reference path="./CompanyDAO.ts"/>
+///<reference path="./kii-cloud.sdk.d.ts"/>
+var CompanyDAOImpl = (function () {
+    function CompanyDAOImpl() {
+    }
+    CompanyDAOImpl.prototype.getAll = function (callback) {
+        var _this = this;
+        if (this.cache != null) {
+            callback(null, this.toArray());
+            return;
+        }
+        var bucket = Kii.bucketWithName('company');
+        var query = new KiiQuery();
+        var resultList = [];
+        var queryCallback = {
+            success: function (q, result, next) {
+                if (_this.cache == null) {
+                    _this.cache = {};
+                }
+                for (var i = 0; i < result.length; ++i) {
+                    var obj = result[i];
+                    _this.cache[obj.getUUID()] = _this.toCompany(obj);
+                }
+                callback(null, _this.toArray());
+            },
+            failure: function (b, error) {
+                callback(error, null);
+            }
+        };
+        bucket.executeQuery(query, queryCallback);
+    };
+    CompanyDAOImpl.prototype.getById = function (id, callback) {
+        var _this = this;
+        if (this.cache != null) {
+            var c = this.cache[id];
+            if (c != null) {
+                callback(null, c);
+            }
+        }
+        var uri = 'kiicloud://buckets/company/objects/' + id;
+        var obj = KiiObject.objectWithURI(uri);
+        obj.refresh({
+            success: function (o) {
+                var company = _this.toCompany(o);
+                _this.addToCache(company);
+                callback(null, company);
+            },
+            failure: function (o, error) {
+                callback(error, null);
+            }
+        });
+    };
+    CompanyDAOImpl.prototype.getMembers = function (company, accountDAO, callback) {
+        var _this = this;
+        var group = KiiGroup.groupWithID(company.id);
+        group.getMemberList({
+            success: function (g, list) {
+                _this.refreshMembers(company, accountDAO, list, callback);
+            },
+            failure: function (g, error) {
+                callback(error, null);
+            }
+        });
+    };
+    CompanyDAOImpl.prototype.refreshMembers = function (company, accountDAO, list, callback) {
+        var idList = [];
+        for (var i = 0; i < list.length; ++i) {
+            idList.push(list[i].getUUID());
+        }
+        if (idList.length == 0) {
+            company.members = [];
+            callback(null, company);
+            return;
+        }
+        accountDAO.getByIdList(idList, function (e, accountList) {
+            if (e != null) {
+                callback(e, null);
+                return;
+            }
+            company.members = accountList;
+            callback(null, company);
+        });
+    };
+    CompanyDAOImpl.prototype.toCompany = function (obj) {
+        var c = new Company();
+        c.id = obj.getUUID();
+        c.name = obj.get('name');
+        c.url = obj.get('url');
+        c.thumbnail = obj.get('thumbnailUrl');
+        c.description = obj.get('desc');
+        return c;
+    };
+    CompanyDAOImpl.prototype.toArray = function () {
+        var list = [];
+        for (var key in this.cache) {
+            list.push(this.cache[key]);
+        }
+        return list;
+    };
+    CompanyDAOImpl.prototype.addToCache = function (c) {
+        if (this.cache == null) {
+            this.cache = {};
+        }
+        this.cache[c.id] = c;
+    };
+    return CompanyDAOImpl;
 })();
 ///<reference path="./Account.ts"/>
 ///<reference path="./kii-cloud.sdk.d.ts"/>
@@ -425,6 +591,7 @@ var Application = (function () {
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./EditAccountPage.ts"/>
 /// <reference path="./AccountDAOImpl.ts"/>
+/// <reference path="./CompanyDAOImpl.ts"/>
 /// <reference path="./Application.ts"/>
 var app = new Application();
 var models = {};
@@ -445,10 +612,10 @@ var AppRouter = Backbone.Router.extend({
         this.setPage(new ConferenceListPage(app));
     },
     companies: function () {
-        this.setPage(new CompanyListPage(app));
+        this.setPage(new CompanyListPage(app, models.company));
     },
     companyDetail: function (id) {
-        this.setPage(new CompanyDetailPage(app, id));
+        this.setPage(new CompanyDetailPage(app, models.account, models.company, id));
     },
     members: function () {
         this.setPage(new MemberListPage(app));
@@ -482,6 +649,7 @@ var AppRouter = Backbone.Router.extend({
 });
 $(function () {
     models.account = new AccountDAOImpl();
+    models.company = new CompanyDAOImpl();
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

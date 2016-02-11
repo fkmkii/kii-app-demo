@@ -9,6 +9,7 @@
 /// <reference path="./EditAccountPage.ts"/>
 
 /// <reference path="./AccountDAOImpl.ts"/>
+/// <reference path="./CompanyDAOImpl.ts"/>
 
 /// <reference path="./Application.ts"/>
 declare var $;
@@ -36,10 +37,10 @@ var AppRouter = Backbone.Router.extend({
         this.setPage(new ConferenceListPage(app));
     },
     companies : function() {
-        this.setPage(new CompanyListPage(app));
+        this.setPage(new CompanyListPage(app, models.company));
     },
     companyDetail : function(id : string) {
-        this.setPage(new CompanyDetailPage(app, id));
+        this.setPage(new CompanyDetailPage(app, models.account, models.company, id));
     },
     members : function() {
         this.setPage(new MemberListPage(app));
@@ -74,6 +75,7 @@ var AppRouter = Backbone.Router.extend({
 
 $(() => {
     models.account = new AccountDAOImpl();
+    models.company = new CompanyDAOImpl();
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

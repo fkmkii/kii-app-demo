@@ -37,10 +37,8 @@ class AccountDAOImpl implements AccountDAO {
         var uri = 'kiicloud://buckets/account/objects/' + account.id;
         var obj = KiiObject.objectWithURI(uri);
         obj.refresh({
-            success : (accountObj : KiiObject) => {
-                account.name = <string>accountObj.get('name');
-                account.thumbnailUrl = <string>accountObj.get('thumbnail_url');
-                
+            success : (o : KiiObject) => {
+                account = this.toAccount(o);                
                 // save access token
                 localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
                 callback(null, account);
@@ -49,6 +47,26 @@ class AccountDAOImpl implements AccountDAO {
                 callback(error, null);
             }
         });
+    }
+
+    getByIdList(idList : Array<string>, callback : (e : any, list : Array<Account>) => void) {
+        var bucket = Kii.bucketWithName('account');
+        var query = KiiQuery.queryWithClause(KiiClause.inClause('_id', <any[]>idList));
+        var resultList : Array<Account> = [];
+
+        var queryCallback = {
+            success : (q : KiiQuery, result : Array<KiiObject>, next : KiiQuery) => {
+                for (var i = 0 ; i < result.length ; ++i) {
+                    var obj = result[i]
+                    resultList.push(this.toAccount(obj));
+                }
+                callback(null, resultList);
+            },
+            failure : (b : KiiBucket, error : string) => {
+                callback(error, null);
+            }
+        };
+        bucket.executeQuery(query, queryCallback);        
     }
 
     update(account : Account, name : string, thumbnail : string,
@@ -69,5 +87,13 @@ class AccountDAOImpl implements AccountDAO {
                 callback(error, account);
             }
         }, true);
+    }
+
+    private toAccount(obj : KiiObject) : Account {
+        var a = new Account();
+        a.id = obj.getUUID();
+        a.name = <string>obj.get('name');
+        a.thumbnailUrl = <string>obj.get('thumbnail_url');
+        return a;
     }
 }

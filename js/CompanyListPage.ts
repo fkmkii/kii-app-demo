@@ -1,39 +1,49 @@
+///<reference path="./CompanyDAO.ts"/>
+
 class CompanyListPage implements Page {
     app : Application;
     ractive : Ractive;
+    companyDAO : CompanyDAO;
+
+    list : Array<Company>;
     
-    constructor(app : Application) {
+    constructor(app : Application, companyDAO : CompanyDAO) {
         this.app = app;
+        this.companyDAO = companyDAO;
     }
 
     loginRequired() : boolean {
-        return false;
+        return true;
     }
     
     onCreate() {
-        var data = [
-            {'name' : 'Kii', 'url' : 'https://jp.kii.com/'},
-            {'name' : 'Mokelab', 'url' : 'http://mokelab.com'},
-            {'name' : 'Company1', 'url' : 'http://mokelab.com'},
-            {'name' : 'Company2', 'url' : 'http://mokelab.com'},
-        ];
+        this.app.setDrawerEnabled(true);
+        this.app.setTitle('企業');
+        this.companyDAO.getAll((e : any, list : Array<Company>) => {
+            if (e != null) {
+                return;
+            }
+            this.list = list;
+            this.onCreateView();
+        });
+    }
+    
+    private onCreateView() {
         this.ractive = new Ractive({
             el : '#container',
             template : '#CompanyListTemplate',
             data : {
-                list : data
+                list : this.list,
             }
         });
         this.ractive.on({
-            companyClicked : (e : any, company : any) => {
+            companyClicked : (e : any, company : Company) => {
                 this.showDetail(company);
             }            
         });
-        this.app.setDrawerEnabled(true);
-        this.app.setTitle('企業');
     }
 
-    private showDetail(company : any) {
+    private showDetail(company : Company) {
         app.navigate('/companies/' + company.id);
     }
 }
