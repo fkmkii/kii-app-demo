@@ -101,5 +101,8 @@ class Application {
     setCurrentAccount(account : Account) {
         this.currentAccount = account;
         this.drawer.set('account', account);
+        var itemList = this.drawer.get('menuItems');
+        itemList[0] = account.name;
+        this.drawer.set('menuItems', itemList);
     }
 }

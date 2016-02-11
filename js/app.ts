@@ -43,10 +43,10 @@ var AppRouter = Backbone.Router.extend({
         this.setPage(new CompanyDetailPage(app, models.account, models.company, id));
     },
     members : function() {
-        this.setPage(new MemberListPage(app));
+        this.setPage(new MemberListPage(app, models.account));
     },
     memberDetail : function(id : string) {
-        this.setPage(new MemberDetailPage(app, id));
+        this.setPage(new MemberDetailPage(app, models.account, id));
     },
     editAccount : function() {
         this.setPage(new EditAccountPage(app, models.account));
