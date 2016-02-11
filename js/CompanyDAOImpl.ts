@@ -109,6 +109,40 @@ class CompanyDAOImpl implements CompanyDAO {
         }, true);
     }
 
+    addMember(company : Company, name : string, email : string, password : string, callback : (e : any, company : Company) => void) {
+        var entry = Kii.serverCodeEntry("createMember");
+        var params = {
+            groupId : company.id,
+            name : name,
+            email : email,
+            password : password,
+        };
+        entry.execute(params, {
+            success : (entry : KiiServerCodeEntry, args : any, result : KiiServerCodeExecResult) => {
+                var vals = result.getReturnedValue();
+                if (vals["returnedValue"].code == 0) {                    
+                    // clear member cache
+                    company.members = null;
+                    // add this user to cache
+                    var a = vals["returnedValue"].account;
+                    var account = new Account();
+                    account.id = a.id
+                    account.name = a.name;
+                    account.organization = a.organization;
+                    account.thumbnailUrl = a.thumbnail_url;
+                    account.description = a.desc;
+                    models.account.cache[account.id] = account;
+                    callback(null, company);
+                } else {
+                    callback('failed', null);
+                }
+            },
+            failure : (entry : KiiServerCodeEntry, args : any, result : KiiServerCodeExecResult, error : string) => {
+                callback(error, null);
+            }
+        });
+    }
+
     private toCompany(obj : KiiObject) : Company {
         var c = new Company();
         c.id = obj.getUUID();

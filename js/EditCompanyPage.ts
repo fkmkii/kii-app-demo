@@ -44,6 +44,9 @@ class EditCompanyPage implements Page {
             updateInfo : () => {
                 this.update();
             },
+            addMember : () => {
+                this.addMember();
+            }
         });
         this.app.setDrawerEnabled(false);
         this.app.showBackButton();
@@ -60,6 +63,22 @@ class EditCompanyPage implements Page {
                 alert(e);
                 return;
             }
+        });
+    }
+
+    private addMember() {
+        var r = this.ractive;
+        var name = r.get('newName');
+        var email = r.get('newEmail');
+        var password = r.get('newPassword');
+        this.companyDAO.addMember(this.company, name, email, password, (e : any, company : Company) => {
+            if (e != null) {
+                alert(e);
+                return;
+            }
+            r.set('newName', '');
+            r.set('newEmail', '');
+            r.set('newPassword', '');
         });
     }
 }
