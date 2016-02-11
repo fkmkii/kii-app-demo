@@ -7,12 +7,17 @@
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./EditAccountPage.ts"/>
+
+/// <reference path="./AccountDAOImpl.ts"/>
+
 /// <reference path="./Application.ts"/>
 declare var $;
 declare var _;
 declare var Backbone;
 
 var app = new Application();
+
+var models : any = {};
 
 var AppRouter = Backbone.Router.extend({
     routes : {
@@ -24,37 +29,51 @@ var AppRouter = Backbone.Router.extend({
         "members(/:id)" : "memberDetail",
         "account/edit" : "editAccount",
     },
-    top : () => {
-        app.page = new TopPage(app);
-        app.page.onCreate();
+    top : function(){
+        this.setPage(new TopPage(app, models.account));
     },
-    conferences : () => {
-        app.page = new ConferenceListPage(app);
-        app.page.onCreate();
+    conferences : function() {
+        this.setPage(new ConferenceListPage(app));
     },
-    companies : () => {
-        app.page = new CompanyListPage(app);
-        app.page.onCreate();
+    companies : function() {
+        this.setPage(new CompanyListPage(app));
     },
-    companyDetail : (id : string) => {
-        app.page = new CompanyDetailPage(app, id);
-        app.page.onCreate();
+    companyDetail : function(id : string) {
+        this.setPage(new CompanyDetailPage(app, id));
     },
-    members : () => {
-        app.page = new MemberListPage(app);
-        app.page.onCreate();
+    members : function() {
+        this.setPage(new MemberListPage(app));
     },
-    memberDetail : (id : string) => {
-        app.page = new MemberDetailPage(app, id);
-        app.page.onCreate();
+    memberDetail : function(id : string) {
+        this.setPage(new MemberDetailPage(app, id));
     },
-    editAccount : () => {
-        app.page = new EditAccountPage(app);
-        app.page.onCreate();
+    editAccount : function() {
+        this.setPage(new EditAccountPage(app, models.account));
+    },
+    setPage : (page : Page) => {
+        app.page = page;
+        if (!page.loginRequired()) {
+            page.onCreate();
+            return;
+        }
+        if (app.currentAccount != null) {
+            page.onCreate();
+            return;
+        }
+        // login with token
+        models.account.loginWithStoredToken((e : any, account : Account) => {
+            if (e != null) {
+                app.navigate('/');
+                return;
+            }
+            app.setCurrentAccount(account);
+            page.onCreate();
+        });
     }
 });
 
 $(() => {
+    models.account = new AccountDAOImpl();
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

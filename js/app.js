@@ -1,7 +1,18 @@
-var TopPage = (function () {
-    function TopPage(app) {
-        this.app = app;
+var Account = (function () {
+    function Account() {
     }
+    return Account;
+})();
+///<reference path="./Account.ts"/>
+///<reference path="./AccountDAO.ts"/>
+var TopPage = (function () {
+    function TopPage(app, accountDAO) {
+        this.app = app;
+        this.accountDAO = accountDAO;
+    }
+    TopPage.prototype.loginRequired = function () {
+        return false;
+    };
     TopPage.prototype.onCreate = function () {
         var _this = this;
         this.ractive = new Ractive({
@@ -16,7 +27,17 @@ var TopPage = (function () {
         this.app.setDrawerEnabled(false);
     };
     TopPage.prototype.login = function () {
-        this.app.navigate('/conferences');
+        var _this = this;
+        var email = this.ractive.get('email');
+        var password = this.ractive.get('password');
+        this.accountDAO.login(email, password, function (e, account) {
+            if (e != null) {
+                alert(e);
+                return;
+            }
+            _this.app.setCurrentAccount(account);
+            _this.app.navigate('/conferences');
+        });
     };
     return TopPage;
 })();
@@ -24,6 +45,9 @@ var ConferenceListPage = (function () {
     function ConferenceListPage(app) {
         this.app = app;
     }
+    ConferenceListPage.prototype.loginRequired = function () {
+        return false;
+    };
     ConferenceListPage.prototype.onCreate = function () {
         var data = [
             { 'title': '第3回カンファレンス', 'desc': '概要3' },
@@ -46,6 +70,9 @@ var CompanyListPage = (function () {
     function CompanyListPage(app) {
         this.app = app;
     }
+    CompanyListPage.prototype.loginRequired = function () {
+        return false;
+    };
     CompanyListPage.prototype.onCreate = function () {
         var _this = this;
         var data = [
@@ -79,6 +106,9 @@ var CompanyDetailPage = (function () {
         this.app = app;
         this.id = id;
     }
+    CompanyDetailPage.prototype.loginRequired = function () {
+        return false;
+    };
     CompanyDetailPage.prototype.onCreate = function () {
         var _this = this;
         var company = {
@@ -116,6 +146,9 @@ var MemberListPage = (function () {
     function MemberListPage(app) {
         this.app = app;
     }
+    MemberListPage.prototype.loginRequired = function () {
+        return false;
+    };
     MemberListPage.prototype.onCreate = function () {
         var _this = this;
         var data = [
@@ -147,6 +180,9 @@ var MemberDetailPage = (function () {
         this.app = app;
         this.id = id;
     }
+    MemberDetailPage.prototype.loginRequired = function () {
+        return false;
+    };
     MemberDetailPage.prototype.onCreate = function () {
         var member = {
             'name': 'fkm',
@@ -168,33 +204,129 @@ var MemberDetailPage = (function () {
     return MemberDetailPage;
 })();
 var EditAccountPage = (function () {
-    function EditAccountPage(app) {
+    function EditAccountPage(app, accountDAO) {
         this.app = app;
+        this.accountDAO = accountDAO;
     }
+    EditAccountPage.prototype.loginRequired = function () {
+        return true;
+    };
     EditAccountPage.prototype.onCreate = function () {
-        var member = {
-            'name': 'fkm',
-            'organization': 'Mokelab',
-            'email': 'demo@mokelab.com',
-            'thumbnail': 'https://pbs.twimg.com/profile_images/693814056348585985/uB2GyQVW.png',
-            'desc': 'Sample description'
-        };
+        var _this = this;
+        var account = this.app.currentAccount;
         this.ractive = new Ractive({
             el: '#container',
             template: '#EditAccountTemplate',
             data: {
-                member: member
+                name: account.name,
+                thumbnailUrl: account.thumbnailUrl,
+                description: account.description
+            }
+        });
+        this.ractive.on({
+            updateBasic: function () {
+                _this.updateBasic();
             }
         });
         this.app.setDrawerEnabled(false);
         this.app.showBackButton();
     };
+    EditAccountPage.prototype.updateBasic = function () {
+        var _this = this;
+        var r = this.ractive;
+        var name = r.get('name');
+        var thumbnail = r.get('thumbnailUrl');
+        var desc = r.get('description');
+        this.accountDAO.update(this.app.currentAccount, name, thumbnail, desc, function (e, account) {
+            if (e != null) {
+                alert(e);
+                return;
+            }
+            _this.app.currentAccount = account;
+        });
+    };
     return EditAccountPage;
 })();
+///<reference path="./AccountDAO.ts"/>
+///<reference path="./kii-cloud.sdk.d.ts"/>
+var AccountDAOImpl = (function () {
+    function AccountDAOImpl() {
+    }
+    AccountDAOImpl.prototype.login = function (email, password, callback) {
+        var _this = this;
+        KiiUser.authenticate(email, password, {
+            success: function (user) {
+                var account = new Account();
+                account.id = user.getUUID();
+                _this.getCurrentAccount(account, callback);
+            },
+            failure: function (user, error) {
+                callback(error, user);
+            }
+        });
+    };
+    AccountDAOImpl.prototype.loginWithStoredToken = function (callback) {
+        var _this = this;
+        var token = localStorage.getItem('token');
+        if (token == null) {
+            callback('stored token not found', null);
+            return;
+        }
+        KiiUser.authenticateWithToken(token, {
+            success: function (user) {
+                var account = new Account();
+                account.id = user.getUUID();
+                _this.getCurrentAccount(account, callback);
+            },
+            failure: function (user, error) {
+                callback(error, null);
+            }
+        });
+    };
+    AccountDAOImpl.prototype.getCurrentAccount = function (account, callback) {
+        var uri = 'kiicloud://buckets/account/objects/' + account.id;
+        var obj = KiiObject.objectWithURI(uri);
+        obj.refresh({
+            success: function (accountObj) {
+                account.name = accountObj.get('name');
+                account.thumbnailUrl = accountObj.get('thumbnail_url');
+                // save access token
+                localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
+                callback(null, account);
+            },
+            failure: function (o, error) {
+                callback(error, null);
+            }
+        });
+    };
+    AccountDAOImpl.prototype.update = function (account, name, thumbnail, description, callback) {
+        var uri = 'kiicloud://buckets/account/objects/' + account.id;
+        var obj = KiiObject.objectWithURI(uri);
+        obj.set('name', name);
+        obj.set('thumbnail_url', thumbnail);
+        obj.set('desc', description);
+        obj.save({
+            success: function (o) {
+                account.name = name;
+                account.thumbnailUrl = thumbnail;
+                account.description = description;
+                callback(null, account);
+            },
+            failure: function (o, error) {
+                callback(error, account);
+            }
+        }, true);
+    };
+    return AccountDAOImpl;
+})();
+///<reference path="./Account.ts"/>
+///<reference path="./kii-cloud.sdk.d.ts"/>
 var Application = (function () {
     function Application() {
     }
     Application.prototype.start = function () {
+        // Kii initialization
+        Kii.initializeWithSite("1461e491", "b4b10b319ce3cf6a8cd32ca957c2c2ae", KiiSite.JP);
         this.header = new Ractive({
             el: '#header',
             template: '#headerTemplate',
@@ -277,6 +409,10 @@ var Application = (function () {
         }
         this.header.set('title', value);
     };
+    Application.prototype.setCurrentAccount = function (account) {
+        this.currentAccount = account;
+        this.drawer.set('account', account);
+    };
     return Application;
 })();
 /// <reference path="./ractive.d.ts"/>
@@ -288,8 +424,10 @@ var Application = (function () {
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./EditAccountPage.ts"/>
+/// <reference path="./AccountDAOImpl.ts"/>
 /// <reference path="./Application.ts"/>
 var app = new Application();
+var models = {};
 var AppRouter = Backbone.Router.extend({
     routes: {
         "": "top",
@@ -301,35 +439,49 @@ var AppRouter = Backbone.Router.extend({
         "account/edit": "editAccount"
     },
     top: function () {
-        app.page = new TopPage(app);
-        app.page.onCreate();
+        this.setPage(new TopPage(app, models.account));
     },
     conferences: function () {
-        app.page = new ConferenceListPage(app);
-        app.page.onCreate();
+        this.setPage(new ConferenceListPage(app));
     },
     companies: function () {
-        app.page = new CompanyListPage(app);
-        app.page.onCreate();
+        this.setPage(new CompanyListPage(app));
     },
     companyDetail: function (id) {
-        app.page = new CompanyDetailPage(app, id);
-        app.page.onCreate();
+        this.setPage(new CompanyDetailPage(app, id));
     },
     members: function () {
-        app.page = new MemberListPage(app);
-        app.page.onCreate();
+        this.setPage(new MemberListPage(app));
     },
     memberDetail: function (id) {
-        app.page = new MemberDetailPage(app, id);
-        app.page.onCreate();
+        this.setPage(new MemberDetailPage(app, id));
     },
     editAccount: function () {
-        app.page = new EditAccountPage(app);
-        app.page.onCreate();
+        this.setPage(new EditAccountPage(app, models.account));
+    },
+    setPage: function (page) {
+        app.page = page;
+        if (!page.loginRequired()) {
+            page.onCreate();
+            return;
+        }
+        if (app.currentAccount != null) {
+            page.onCreate();
+            return;
+        }
+        // login with token
+        models.account.loginWithStoredToken(function (e, account) {
+            if (e != null) {
+                app.navigate('/');
+                return;
+            }
+            app.setCurrentAccount(account);
+            page.onCreate();
+        });
     }
 });
 $(function () {
+    models.account = new AccountDAOImpl();
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

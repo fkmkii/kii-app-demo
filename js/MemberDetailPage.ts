@@ -7,6 +7,10 @@ class MemberDetailPage implements Page {
         this.app = app;
         this.id = id;
     }
+
+    loginRequired() : boolean {
+        return false;
+    }
     
     onCreate() {
         var member = {

@@ -7,6 +7,10 @@ class CompanyDetailPage implements Page {
         this.app = app;
         this.id = id;
     }
+
+    loginRequired() : boolean {
+        return false;
+    }
     
     onCreate() {
         var company = {
