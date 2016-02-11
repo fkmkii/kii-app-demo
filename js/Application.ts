@@ -49,6 +49,10 @@ class Application {
             menuClicked : (e : any, index : number) => {
                 this.closeDrawer();
                 this.showPage(index);
+            },
+            companyClicked : (e : any, company : Company) => {
+                this.closeDrawer();
+                this.navigate('/companies/' + company.id + '/edit');
             }
         });
     }
@@ -98,11 +102,12 @@ class Application {
         this.header.set('title', value);
     }
 
-    setCurrentAccount(account : Account) {
+    setCurrentAccount(account : Account, companyList : Array<Company>) {
         this.currentAccount = account;
         this.drawer.set('account', account);
         var itemList = this.drawer.get('menuItems');
         itemList[0] = account.name;
         this.drawer.set('menuItems', itemList);
+        this.drawer.set('companyList', companyList);
     }
 }

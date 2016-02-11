@@ -30,12 +30,12 @@ class TopPage implements Page {
     private login() {
         var email = this.ractive.get('email');
         var password = this.ractive.get('password');
-        this.accountDAO.login(email, password, (e : any, account : Account) => {
+        this.accountDAO.login(email, password, (e : any, account : Account, companyList : Array<Company>) => {
             if (e != null) {
                 alert(e);
                 return;
             }
-            this.app.setCurrentAccount(account);
+            this.app.setCurrentAccount(account, companyList);
             this.app.navigate('/conferences');
         });
     }

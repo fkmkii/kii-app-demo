@@ -7,6 +7,7 @@
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./EditAccountPage.ts"/>
+/// <reference path="./EditCompanyPage.ts"/>
 
 /// <reference path="./AccountDAOImpl.ts"/>
 /// <reference path="./CompanyDAOImpl.ts"/>
@@ -26,6 +27,7 @@ var AppRouter = Backbone.Router.extend({
         "conferences" : "conferences",
         "companies" : "companies",
         "companies(/:id)" : "companyDetail",
+        "companies(/:id)/edit" : "editCompany",
         "members" : "members",
         "members(/:id)" : "memberDetail",
         "account/edit" : "editAccount",
@@ -51,6 +53,9 @@ var AppRouter = Backbone.Router.extend({
     editAccount : function() {
         this.setPage(new EditAccountPage(app, models.account));
     },
+    editCompany : function(id : string) {
+        this.setPage(new EditCompanyPage(app, id, models.company));
+    },
     setPage : (page : Page) => {
         app.page = page;
         if (!page.loginRequired()) {
@@ -62,20 +67,20 @@ var AppRouter = Backbone.Router.extend({
             return;
         }
         // login with token
-        models.account.loginWithStoredToken((e : any, account : Account) => {
+        models.account.loginWithStoredToken((e : any, account : Account, companyList : Array<Company>) => {
             if (e != null) {
                 app.navigate('/');
                 return;
             }
-            app.setCurrentAccount(account);
+            app.setCurrentAccount(account, companyList);
             page.onCreate();
         });
     }
 });
 
 $(() => {
-    models.account = new AccountDAOImpl();
     models.company = new CompanyDAOImpl();
+    models.account = new AccountDAOImpl(models.company);
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

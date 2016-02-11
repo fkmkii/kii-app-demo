@@ -37,8 +37,8 @@
     </ul>
     <hr/>
     <ul id="menu-list">
-    {{#companyList:i}}
-      <li on-click="companyClicked:{{i}}">{{.}}</li>
+    {{#companyList}}
+      <li on-click="companyClicked:{{.}}">{{name}}</li>
     {{/}}
     </ul>
     <hr/>
@@ -76,21 +76,21 @@
 
   <script id="CompanyDetailTemplate" type="text/ractive">
     <section class="CompanyDetail card-2">
-      <img class="thumbnail" src="{{company.thumbnail}}"/>
+      <img class="thumbnail" src="{{company.thumbnailUrl}}"/>
       <h2 class="name">{{company.name}}</h2>
       <p class="url">{{company.url}}</p>
-      <p class="desc">{{company.desc}}</p>
+      <p class="desc">{{company.description}}</p>
     </section>
 
     <section class="card-2">
       <h2>Members</h2>
       <table class="members">
         <thead>
-          <tr><th class="name-col">Name</th><th class="name-col">Orgzanization</th><th>Email</th></tr>
+          <tr><th class="name-col">Name</th><th>Orgzanization</th></tr>
         </thead>
         <tbody>
           {{#memberList}}
-          <tr on-click="memberClicked:{{.}}"><td>{{name}}</td><td>{{organization}}</td><td>{{email}}</td></tr>
+          <tr on-click="memberClicked:{{.}}"><td>{{name}}</td><td>{{organization}}</td></tr>
           {{/}}
         </tbody>
       </table>
@@ -138,8 +138,21 @@
       </ul>
     </section>
   </script>
-  
+
   <script id="EditCompanyTemplate" type="text/ractive">
+    <section class="EditAccount card-2">
+      <h2>Basic information</h2>
+      <ul>
+        <li><label>Name</label><input type="text" value="{{name}}"/></li>
+        <li><label>URL</label><input type="text" value="{{url}}"/></li>
+        <li><label>Thumbnail URL</label><input type="text" value="{{thumbnailUrl}}"/></li>
+        <li><label>Description</label><textarea value="{{description}}"></textarea></li>
+      </ul>
+      <div class="button-submit"><label class="button-primary" on-click="updateInfo">Update</label></div>
+    </section>
+  </script>
+  
+  <script id="" type="text/ractive">
     <section class="card-2">
     </section>
   </script>
