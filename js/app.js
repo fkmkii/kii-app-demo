@@ -175,24 +175,33 @@ var CompanyDetailPage = (function () {
     };
     return CompanyDetailPage;
 })();
+///<reference path="./AccountDAO.ts"/>
 var MemberListPage = (function () {
-    function MemberListPage(app) {
+    function MemberListPage(app, accountDAO) {
         this.app = app;
+        this.accountDAO = accountDAO;
     }
     MemberListPage.prototype.loginRequired = function () {
-        return false;
+        return true;
     };
     MemberListPage.prototype.onCreate = function () {
         var _this = this;
-        var data = [
-            { 'name': 'fkm', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
-            { 'name': 'moke', 'organization': 'Mokelab', 'email': 'demo@mokelab.com' },
-        ];
+        this.accountDAO.getAll(function (e, list) {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            _this.list = list;
+            _this.onCreateView();
+        });
+    };
+    MemberListPage.prototype.onCreateView = function () {
+        var _this = this;
         this.ractive = new Ractive({
             el: '#container',
             template: '#MemberListTemplate',
             data: {
-                list: data
+                list: this.list
             }
         });
         this.ractive.on({
@@ -208,27 +217,33 @@ var MemberListPage = (function () {
     };
     return MemberListPage;
 })();
+///<reference path="./AccountDAO.ts"/>
 var MemberDetailPage = (function () {
-    function MemberDetailPage(app, id) {
+    function MemberDetailPage(app, accountDAO, id) {
         this.app = app;
+        this.accountDAO = accountDAO;
         this.id = id;
     }
     MemberDetailPage.prototype.loginRequired = function () {
-        return false;
+        return true;
     };
     MemberDetailPage.prototype.onCreate = function () {
-        var member = {
-            'name': 'fkm',
-            'organization': 'Mokelab',
-            'email': 'demo@mokelab.com',
-            'thumbnail': 'https://pbs.twimg.com/profile_images/693814056348585985/uB2GyQVW.png',
-            'desc': 'Sample description'
-        };
+        var _this = this;
+        this.accountDAO.getById(this.id, function (e, account) {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            _this.account = account;
+            _this.onCreateView();
+        });
+    };
+    MemberDetailPage.prototype.onCreateView = function () {
         this.ractive = new Ractive({
             el: '#container',
             template: '#MemberDetailTemplate',
             data: {
-                member: member
+                member: this.account
             }
         });
         this.app.setDrawerEnabled(false);
@@ -268,9 +283,10 @@ var EditAccountPage = (function () {
         var _this = this;
         var r = this.ractive;
         var name = r.get('name');
+        var organization = r.get('organization');
         var thumbnail = r.get('thumbnailUrl');
         var desc = r.get('description');
-        this.accountDAO.update(this.app.currentAccount, name, thumbnail, desc, function (e, account) {
+        this.accountDAO.update(this.app.currentAccount, name, organization, thumbnail, desc, function (e, account) {
             if (e != null) {
                 alert(e);
                 return;
@@ -289,9 +305,7 @@ var AccountDAOImpl = (function () {
         var _this = this;
         KiiUser.authenticate(email, password, {
             success: function (user) {
-                var account = new Account();
-                account.id = user.getUUID();
-                _this.getCurrentAccount(account, callback);
+                _this.getData(user.getUUID(), callback);
             },
             failure: function (user, error) {
                 callback(error, user);
@@ -307,27 +321,84 @@ var AccountDAOImpl = (function () {
         }
         KiiUser.authenticateWithToken(token, {
             success: function (user) {
-                var account = new Account();
-                account.id = user.getUUID();
-                _this.getCurrentAccount(account, callback);
+                _this.getData(user.getUUID(), callback);
             },
             failure: function (user, error) {
                 callback(error, null);
             }
         });
     };
-    AccountDAOImpl.prototype.getCurrentAccount = function (account, callback) {
+    AccountDAOImpl.prototype.getData = function (id, callback) {
         var _this = this;
-        var uri = 'kiicloud://buckets/account/objects/' + account.id;
-        var obj = KiiObject.objectWithURI(uri);
-        obj.refresh({
-            success: function (o) {
-                account = _this.toAccount(o);
-                // save access token
-                localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
+        var bucket = Kii.bucketWithName('account');
+        var query = new KiiQuery();
+        var resultList = [];
+        var queryCallback = {
+            success: function (q, result, next) {
+                if (_this.cache == null) {
+                    _this.cache = {};
+                }
+                for (var i = 0; i < result.length; ++i) {
+                    var obj = result[i];
+                    _this.cache[obj.getUUID()] = _this.toAccount(obj);
+                }
+                _this.getCompany(id, callback);
+            },
+            failure: function (b, error) {
+                callback(error, null);
+            }
+        };
+        bucket.executeQuery(query, queryCallback);
+    };
+    AccountDAOImpl.prototype.getCompany = function (id, callback) {
+        var _this = this;
+        models.company.getAll(function (e, list) {
+            if (e != null) {
+                callback(e, null);
+                return;
+            }
+            // save access token
+            localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
+            callback(null, _this.cache[id]);
+        });
+    };
+    AccountDAOImpl.prototype.getAll = function (callback) {
+        var _this = this;
+        if (this.cache != null) {
+            callback(null, this.toArray());
+            return;
+        }
+        var bucket = Kii.bucketWithName('account');
+        var query = new KiiQuery();
+        var resultList = [];
+        var queryCallback = {
+            success: function (q, result, next) {
+                for (var i = 0; i < result.length; ++i) {
+                    var obj = result[i];
+                    resultList.push(_this.toAccount(obj));
+                }
+                callback(null, resultList);
+            },
+            failure: function (b, error) {
+                callback(error, null);
+            }
+        };
+        bucket.executeQuery(query, queryCallback);
+    };
+    AccountDAOImpl.prototype.getById = function (id, callback) {
+        var account = this.cache[id];
+        if (account.email != null) {
+            callback(null, account);
+            return;
+        }
+        var uri = 'kiicloud://users/' + id;
+        var user = KiiUser.userWithID(id);
+        user.refresh({
+            success: function (u) {
+                account.email = u.getEmailAddress();
                 callback(null, account);
             },
-            failure: function (o, error) {
+            failure: function (u, error) {
                 callback(error, null);
             }
         });
@@ -351,15 +422,17 @@ var AccountDAOImpl = (function () {
         };
         bucket.executeQuery(query, queryCallback);
     };
-    AccountDAOImpl.prototype.update = function (account, name, thumbnail, description, callback) {
+    AccountDAOImpl.prototype.update = function (account, name, organization, thumbnail, description, callback) {
         var uri = 'kiicloud://buckets/account/objects/' + account.id;
         var obj = KiiObject.objectWithURI(uri);
         obj.set('name', name);
+        obj.set('organization', organization);
         obj.set('thumbnail_url', thumbnail);
         obj.set('desc', description);
         obj.save({
             success: function (o) {
                 account.name = name;
+                account.organization = organization;
                 account.thumbnailUrl = thumbnail;
                 account.description = description;
                 callback(null, account);
@@ -373,8 +446,17 @@ var AccountDAOImpl = (function () {
         var a = new Account();
         a.id = obj.getUUID();
         a.name = obj.get('name');
+        a.organization = obj.get('organization');
         a.thumbnailUrl = obj.get('thumbnail_url');
+        a.description = obj.get('desc');
         return a;
+    };
+    AccountDAOImpl.prototype.toArray = function () {
+        var list = [];
+        for (var key in this.cache) {
+            list.push(this.cache[key]);
+        }
+        return list;
     };
     return AccountDAOImpl;
 })();
@@ -578,6 +660,9 @@ var Application = (function () {
     Application.prototype.setCurrentAccount = function (account) {
         this.currentAccount = account;
         this.drawer.set('account', account);
+        var itemList = this.drawer.get('menuItems');
+        itemList[0] = account.name;
+        this.drawer.set('menuItems', itemList);
     };
     return Application;
 })();
@@ -618,10 +703,10 @@ var AppRouter = Backbone.Router.extend({
         this.setPage(new CompanyDetailPage(app, models.account, models.company, id));
     },
     members: function () {
-        this.setPage(new MemberListPage(app));
+        this.setPage(new MemberListPage(app, models.account));
     },
     memberDetail: function (id) {
-        this.setPage(new MemberDetailPage(app, id));
+        this.setPage(new MemberDetailPage(app, models.account, id));
     },
     editAccount: function () {
         this.setPage(new EditAccountPage(app, models.account));

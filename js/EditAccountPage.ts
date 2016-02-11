@@ -35,9 +35,10 @@ class EditAccountPage implements Page {
     private updateBasic() {
         var r = this.ractive;
         var name = r.get('name');
+        var organization = r.get('organization');
         var thumbnail = r.get('thumbnailUrl');
         var desc = r.get('description');
-        this.accountDAO.update(this.app.currentAccount, name, thumbnail, desc, (e : any, account : Account) => {
+        this.accountDAO.update(this.app.currentAccount, name, organization, thumbnail, desc, (e : any, account : Account) => {
             if (e != null) {
                 alert(e);
                 return;
