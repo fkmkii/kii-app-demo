@@ -1,9 +1,16 @@
+///<reference path="./Account.ts"/>
+///<reference path="./kii-cloud.sdk.d.ts"/>
+
 class Application {
     router : any;
     page : Page;
     header : any;
     drawer : any;
+    currentAccount : Account;
+
     start() {
+        // Kii initialization
+        Kii.initializeWithSite("1461e491", "b4b10b319ce3cf6a8cd32ca957c2c2ae", KiiSite.JP);
         this.header = new Ractive({
             el : '#header',
             template : '#headerTemplate',
@@ -89,5 +96,10 @@ class Application {
     setTitle(value : string) {
         if (value == null ) { value = 'Kii consortium'; }
         this.header.set('title', value);
+    }
+
+    setCurrentAccount(account : Account) {
+        this.currentAccount = account;
+        this.drawer.set('account', account);
     }
 }

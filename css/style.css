@@ -244,16 +244,23 @@ body {
   .EditAccount ul {
     list-style-type: none; }
   .EditAccount li {
-    min-height: 48px;
-    padding-right: 16px; }
+    min-height: 48px; }
     .EditAccount li label {
       display: inline-block;
-      width: 100px; }
+      width: 130px; }
     .EditAccount li input {
-      width: calc(100% - 116px);
+      width: calc(100% - 146px);
       min-height: 40px; }
     .EditAccount li textarea {
       vertical-align: top;
-      width: calc(100% - 116px);
+      width: calc(100% - 146px);
       height: 64px;
       resize: none; }
+  .EditAccount .button-submit {
+    width: 100px;
+    margin-left: auto;
+    margin-right: 16px;
+    padding: 8px 16px; }
+    .EditAccount .button-submit label {
+      width: 100%;
+      padding: 8px 16px; }

@@ -313,20 +313,29 @@ body {
     }
     li {
         min-height : 48px;
-        padding-right : 16px;
         label {
             display : inline-block;
-            width : 100px;
+            width : 130px;
         }
         input {
-            width : calc(100% - 116px);
+            width : calc(100% - 146px);
             min-height : 40px;
         }
         textarea {
             vertical-align : top;
-            width : calc(100% - 116px);
+            width : calc(100% - 146px);
             height : 64px;
             resize : none;
+        }
+    }
+    .button-submit {
+        width : 100px;
+        margin-left : auto;
+        margin-right : 16px;        
+        padding : 8px 16px;
+        label {
+            width : 100%;
+            padding : 8px 16px;            
         }
     }
 }

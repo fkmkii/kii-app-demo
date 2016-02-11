@@ -5,6 +5,10 @@ class MemberListPage implements Page {
     constructor(app : Application) {
         this.app = app;
     }
+
+    loginRequired() : boolean {
+        return false;
+    }
     
     onCreate() {
         var data = [
