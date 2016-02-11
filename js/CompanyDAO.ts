@@ -8,4 +8,5 @@ interface CompanyDAO {
 
     update(company : Company, name : string, url : string, thumbnail : string,
            description : string, callback : (e : any, company : Company) => void);
+    addMember(company : Company, name : string, email : string, password : string, callback : (e : any, company : Company) => void);
 }

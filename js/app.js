@@ -333,6 +333,9 @@ var EditCompanyPage = (function () {
         this.ractive.on({
             updateInfo: function () {
                 _this.update();
+            },
+            addMember: function () {
+                _this.addMember();
             }
         });
         this.app.setDrawerEnabled(false);
@@ -349,6 +352,21 @@ var EditCompanyPage = (function () {
                 alert(e);
                 return;
             }
+        });
+    };
+    EditCompanyPage.prototype.addMember = function () {
+        var r = this.ractive;
+        var name = r.get('newName');
+        var email = r.get('newEmail');
+        var password = r.get('newPassword');
+        this.companyDAO.addMember(this.company, name, email, password, function (e, company) {
+            if (e != null) {
+                alert(e);
+                return;
+            }
+            r.set('newName', '');
+            r.set('newEmail', '');
+            r.set('newPassword', '');
         });
     };
     return EditCompanyPage;
@@ -644,6 +662,40 @@ var CompanyDAOImpl = (function () {
                 callback(error, company);
             }
         }, true);
+    };
+    CompanyDAOImpl.prototype.addMember = function (company, name, email, password, callback) {
+        var entry = Kii.serverCodeEntry("createMember");
+        var params = {
+            groupId: company.id,
+            name: name,
+            email: email,
+            password: password
+        };
+        entry.execute(params, {
+            success: function (entry, args, result) {
+                var vals = result.getReturnedValue();
+                if (vals["returnedValue"].code == 0) {
+                    // clear member cache
+                    company.members = null;
+                    // add this user to cache
+                    var a = vals["returnedValue"].account;
+                    var account = new Account();
+                    account.id = a.id;
+                    account.name = a.name;
+                    account.organization = a.organization;
+                    account.thumbnailUrl = a.thumbnail_url;
+                    account.description = a.desc;
+                    models.account.cache[account.id] = account;
+                    callback(null, company);
+                }
+                else {
+                    callback('failed', null);
+                }
+            },
+            failure: function (entry, args, result, error) {
+                callback(error, null);
+            }
+        });
     };
     CompanyDAOImpl.prototype.toCompany = function (obj) {
         var c = new Company();
