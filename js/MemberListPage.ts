@@ -1,21 +1,38 @@
+///<reference path="./AccountDAO.ts"/>
+
 class MemberListPage implements Page {
     app : Application;
     ractive : Ractive;
+    accountDAO : AccountDAO;
+
+    list : Array<Account>;
     
-    constructor(app : Application) {
+    constructor(app : Application, accountDAO : AccountDAO) {
         this.app = app;
+        this.accountDAO = accountDAO;
+    }
+
+    loginRequired() : boolean {
+        return true;
     }
     
     onCreate() {
-        var data = [
-            {'name' : 'fkm', 'organization' : 'Mokelab', 'email' : 'demo@mokelab.com'},
-            {'name' : 'moke', 'organization' : 'Mokelab', 'email' : 'demo@mokelab.com'},
-        ];
+        this.accountDAO.getAll((e : any, list : Array<Account>) => {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            this.list = list;
+            this.onCreateView();
+        });
+    }
+    
+    private onCreateView() {
         this.ractive = new Ractive({
             el : '#container',
             template : '#MemberListTemplate',
             data : {
-                list : data
+                list : this.list,
             }
         });
         this.ractive.on({

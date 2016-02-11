@@ -1,26 +1,40 @@
+///<reference path="./AccountDAO.ts"/>
+
 class MemberDetailPage implements Page {
     app : Application;
+    accountDAO : AccountDAO;
     id : string;
     ractive : Ractive;
+
+    account : Account;
     
-    constructor(app : Application, id : string) {
+    constructor(app : Application, accountDAO : AccountDAO, id : string) {
         this.app = app;
+        this.accountDAO = accountDAO;
         this.id = id;
+    }
+
+    loginRequired() : boolean {
+        return true;
     }
     
     onCreate() {
-        var member = {
-            'name' : 'fkm', 
-            'organization' : 'Mokelab',
-            'email' : 'demo@mokelab.com',
-            'thumbnail' : 'https://pbs.twimg.com/profile_images/693814056348585985/uB2GyQVW.png',
-            'desc' : 'Sample description',
-        };
+        this.accountDAO.getById(this.id, (e : any, account : Account) => {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            this.account = account;
+            this.onCreateView();
+        });
+    }
+    
+    private onCreateView() {
         this.ractive = new Ractive({
             el : '#container',
             template : '#MemberDetailTemplate',
             data : {
-                member : member,
+                member : this.account,
             }
         });
         this.app.setDrawerEnabled(false);

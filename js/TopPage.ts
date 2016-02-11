@@ -1,9 +1,17 @@
+///<reference path="./AccountDAO.ts"/>
+
 class TopPage implements Page {
     app : Application;
     ractive : Ractive;
+    accountDAO : AccountDAO;
     
-    constructor(app : Application) {
+    constructor(app : Application, accountDAO : AccountDAO) {
         this.app = app;
+        this.accountDAO = accountDAO;
+    }
+
+    loginRequired() : boolean {
+        return false;
     }
     
     onCreate() {
@@ -20,6 +28,15 @@ class TopPage implements Page {
     }
 
     private login() {
-        this.app.navigate('/conferences');
+        var email = this.ractive.get('email');
+        var password = this.ractive.get('password');
+        this.accountDAO.login(email, password, (e : any, account : Account) => {
+            if (e != null) {
+                alert(e);
+                return;
+            }
+            this.app.setCurrentAccount(account);
+            this.app.navigate('/conferences');
+        });
     }
 }
