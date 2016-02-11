@@ -29,6 +29,11 @@ class CompanyDAOImpl implements CompanyDAO {
         bucket.executeQuery(query, queryCallback);
     }
 
+    getCacheById(id : string) : Company {
+        if (this.cache == null) { return null; }
+        return this.cache[id];
+    }
+
     getById(id : string, callback : (e : any, company : Company) => void) {
         if (this.cache != null) {
             var c = this.cache[id];
@@ -82,12 +87,34 @@ class CompanyDAOImpl implements CompanyDAO {
         });
     }
 
+    update(company : Company, name : string, url : string, thumbnail : string,
+           description : string, callback : (e : any, company : Company) => void) {
+        var uri = 'kiicloud://buckets/company/objects/' + company.id;
+        var obj = KiiObject.objectWithURI(uri);
+        obj.set('name', name);
+        obj.set('url', url);
+        obj.set('thumbnail_url', thumbnail);
+        obj.set('desc', description);
+        obj.save({
+            success : (o : KiiObject) => {
+                company.name = name;
+                company.url = url;
+                company.thumbnailUrl = thumbnail;
+                company.description = description;
+                callback(null, company);
+            },
+            failure : (o : KiiObject, error : string) => {
+                callback(error, company);
+            }
+        }, true);
+    }
+
     private toCompany(obj : KiiObject) : Company {
         var c = new Company();
         c.id = obj.getUUID();
         c.name = <string>obj.get('name');
         c.url = <string>obj.get('url');
-        c.thumbnail = <string>obj.get('thumbnailUrl');
+        c.thumbnailUrl = <string>obj.get('thumbnail_url');
         c.description = <string>obj.get('desc');
         return c;
     }

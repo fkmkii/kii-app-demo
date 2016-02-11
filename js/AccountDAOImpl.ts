@@ -1,26 +1,32 @@
 ///<reference path="./AccountDAO.ts"/>
+///<reference path="./CompanyDAO.ts"/>
 ///<reference path="./kii-cloud.sdk.d.ts"/>
 
 declare var models;
 
 class AccountDAOImpl implements AccountDAO {
+    companyDAO : CompanyDAO;
     cache : any;
 
-    login(email : string, password : string, callback : (e : any, user : any) => void) {
+    constructor(companyDAO : CompanyDAO) {
+        this.companyDAO = companyDAO;
+    }
+
+    login(email : string, password : string, callback : (e : any, account : Account, companyList : Array<Company>) => void) {
         KiiUser.authenticate(email, password, {
             success : (user : KiiUser) => {
                 this.getData(user.getUUID(), callback);
             },
             failure : (user : KiiUser, error : string) => {
-                callback(error, user);
+                callback(error, null, null);
             }
         });
     }
 
-    loginWithStoredToken(callback : (e : any, account : Account) => void) {
+    loginWithStoredToken(callback : (e : any, account : Account, companyList : Array<Company>) => void) {
         var token = localStorage.getItem('token');
         if (token == null) {
-            callback('stored token not found', null);
+            callback('stored token not found', null, null);
             return;
         }
         KiiUser.authenticateWithToken(token, {
@@ -28,12 +34,12 @@ class AccountDAOImpl implements AccountDAO {
                 this.getData(user.getUUID(), callback);
             },
             failure : (user : KiiUser, error : string) => {
-                callback(error, null);
+                callback(error, null, null);
             }
         });
     }
 
-    private getData(id : string, callback : (e : any, user : any) => void) {
+    private getData(id : string, callback : (e : any, account : Account, companyList : Array<Company>) => void) {
         var bucket = Kii.bucketWithName('account');
         var query = new KiiQuery();
         var resultList : Array<Account> = [];
@@ -47,21 +53,38 @@ class AccountDAOImpl implements AccountDAO {
                 this.getCompany(id, callback);
             },
             failure : (b : KiiBucket, error : string) => {
-                callback(error, null);
+                callback(error, null, null);
             }
         };
         bucket.executeQuery(query, queryCallback);
     }
 
-    private getCompany(id : string, callback : (e : any, user : any) => void) {
-        models.company.getAll((e : any, list : any) => {
+    private getCompany(id : string, callback : (e : any, account : Account, companyList : Array<Company>) => void) {
+        this.companyDAO.getAll((e : any, list : any) => {
             if (e != null) {
-                callback(e, null);
+                callback(e, null, null);
                 return;
             }
-            // save access token
-            localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
-            callback(null, this.cache[id]);
+            this.getJoinedCompany(id, callback);
+        });
+    }
+
+    private getJoinedCompany(id : string, callback : (e : any, account : Account, companyList : Array<Company>) => void) {
+        var user = KiiUser.getCurrentUser();
+        user.memberOfGroups({
+            success : (u : KiiUser, list : Array<KiiGroup>) => {
+                var companyList : Array<Company> = [];
+                for (var i = 0 ; i < list.length ; ++i) {
+                    var group = list[i];
+                    companyList.push(this.companyDAO.getCacheById(group.getUUID()));
+                }
+                // save access token
+                localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
+                callback(null, this.cache[id], companyList);
+            },
+            failure : (u : KiiUser, error : string) => {
+                callback(error, null, null);
+            }
         });
     }
 
