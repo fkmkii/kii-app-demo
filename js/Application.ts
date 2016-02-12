@@ -6,6 +6,9 @@ class Application {
     page : Page;
     header : any;
     drawer : any;
+    snack : any;
+
+    clearSnack : any;
     currentAccount : Account;
 
     start() {
@@ -26,6 +29,7 @@ class Application {
             }
         });
         this.initDrawer();
+        this.initSnack();
     }
 
     private initDrawer() {
@@ -94,6 +98,33 @@ class Application {
         KiiUser.logOut();
         this.currentAccount = null;
         this.navigate('/');
+    }
+
+    private initSnack() {
+        this.snack = new Ractive({
+            el : '#snack',
+            template : '#snackTemplate',
+            data : {
+                msgList : [],
+            }
+        });
+        //this.drawer.on({ });
+    }
+
+    addSnack(msg : string) {
+        this.snack.push('msgList', msg);
+        if (this.clearSnack != null) {
+            return;
+        }
+        this.clearSnack = () => {
+            this.snack.splice('msgList', 0, 1);
+            if (this.snack.get('msgList').length == 0) {
+                this.clearSnack = null;
+            } else {
+                setTimeout(this.clearSnack, 3000);
+            }
+        };
+        setTimeout(this.clearSnack, 3000);
     }
 
     setDrawerEnabled(value : boolean) {

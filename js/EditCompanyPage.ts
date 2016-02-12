@@ -60,9 +60,10 @@ class EditCompanyPage implements Page {
         var desc = r.get('description');
         this.companyDAO.update(this.company, name, url, thumbnail, desc, (e : any, company : Company) => {
             if (e != null) {
-                alert(e);
+                this.app.addSnack(e);
                 return;
             }
+            this.app.addSnack('Done!');
         });
     }
 
@@ -73,12 +74,13 @@ class EditCompanyPage implements Page {
         var password = r.get('newPassword');
         this.companyDAO.addMember(this.company, name, email, password, (e : any, company : Company) => {
             if (e != null) {
-                alert(e);
+                this.app.addSnack(e);
                 return;
             }
             r.set('newName', '');
             r.set('newEmail', '');
             r.set('newPassword', '');
+            this.app.addSnack('Done!');
         });
     }
 }

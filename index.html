@@ -12,6 +12,7 @@
   <label for="menu-checkbox" id="overlay"></label>
   <section id="header"></section>
   <section id="container"></section>
+  <section id="snack"></section>
 
   <script id="headerTemplate" type="text/ractive">
     {{#if navDrawerEnabled}}
@@ -43,6 +44,16 @@
     </ul>
     <hr/>
     <button class="button-logout" on-click="logout">Log out</button>
+  </script>
+
+  <script id="snackTemplate" type="text/ractive">
+    {{#if msgList.length > 0}}
+    <ul>
+      {{#msgList:i}}
+      <li>{{.}}</li>
+      {{/}}
+    </ul>
+    {{/if}}
   </script>
 
   <script id="TopTemplate" type="text/ractive">
