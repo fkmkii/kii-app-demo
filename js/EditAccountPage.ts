@@ -28,6 +28,9 @@ class EditAccountPage implements Page {
             updateBasic : () => {
                 this.updateBasic();
             },
+            changePassword : () => {
+                this.changePassword();
+            },
         });
         this.app.setDrawerEnabled(false);
         this.app.showBackButton();
@@ -46,6 +49,22 @@ class EditAccountPage implements Page {
             }
             this.app.currentAccount = account;
             this.app.addSnack('Done!');
+        });
+    }
+
+    private changePassword() {
+        var r = this.ractive;
+        var oldPass = r.get('oldPass');
+        var newPass = r.get('newPass');
+        this.accountDAO.changePassword(oldPass, newPass, (e : any) => {
+            if (e != null) {
+                this.app.addSnack(e);
+                return;
+            }
+            r.set('oldPass', '');
+            r.set('newPass', '');
+            this.app.addSnack('Done!');            
+            this.app.logout();
         });
     }
 }

@@ -293,6 +293,9 @@ var EditAccountPage = (function () {
         this.ractive.on({
             updateBasic: function () {
                 _this.updateBasic();
+            },
+            changePassword: function () {
+                _this.changePassword();
             }
         });
         this.app.setDrawerEnabled(false);
@@ -312,6 +315,22 @@ var EditAccountPage = (function () {
             }
             _this.app.currentAccount = account;
             _this.app.addSnack('Done!');
+        });
+    };
+    EditAccountPage.prototype.changePassword = function () {
+        var _this = this;
+        var r = this.ractive;
+        var oldPass = r.get('oldPass');
+        var newPass = r.get('newPass');
+        this.accountDAO.changePassword(oldPass, newPass, function (e) {
+            if (e != null) {
+                _this.app.addSnack(e);
+                return;
+            }
+            r.set('oldPass', '');
+            r.set('newPass', '');
+            _this.app.addSnack('Done!');
+            _this.app.logout();
         });
     };
     return EditAccountPage;
@@ -558,6 +577,17 @@ var AccountDAOImpl = (function () {
                 callback(error, account);
             }
         }, true);
+    };
+    AccountDAOImpl.prototype.changePassword = function (oldPass, newPass, callback) {
+        var user = KiiUser.getCurrentUser();
+        user.updatePassword(oldPass, newPass, {
+            success: function (u) {
+                callback(null);
+            },
+            failure: function (u, error) {
+                callback(error);
+            }
+        });
     };
     AccountDAOImpl.prototype.toAccount = function (obj) {
         var a = new Account();

@@ -172,6 +172,18 @@ class AccountDAOImpl implements AccountDAO {
         }, true);
     }
 
+    changePassword(oldPass : string, newPass : string, callback : (e : any) => void) {
+        var user = KiiUser.getCurrentUser();
+        user.updatePassword(oldPass, newPass, {
+            success : (u : KiiUser) => {
+                callback(null);
+            },
+            failure : (u : KiiUser, error : string) => {
+                callback(error);
+            }
+        });
+    }
+
     private toAccount(obj : KiiObject) : Account {
         var a = new Account();
         a.id = obj.getUUID();
