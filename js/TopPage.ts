@@ -49,7 +49,7 @@ class TopPage implements Page {
         var password = this.ractive.get('password');
         this.accountDAO.login(email, password, (e : any, account : Account, companyList : Array<Company>) => {
             if (e != null) {
-                alert(e);
+                this.app.addSnack(e);
                 return;
             }
             this.app.setCurrentAccount(account, companyList);

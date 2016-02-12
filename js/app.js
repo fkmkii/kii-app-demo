@@ -56,7 +56,7 @@ var TopPage = (function () {
         var password = this.ractive.get('password');
         this.accountDAO.login(email, password, function (e, account, companyList) {
             if (e != null) {
-                alert(e);
+                _this.app.addSnack(e);
                 return;
             }
             _this.app.setCurrentAccount(account, companyList);
@@ -285,6 +285,7 @@ var EditAccountPage = (function () {
             template: '#EditAccountTemplate',
             data: {
                 name: account.name,
+                organization: account.organization,
                 thumbnailUrl: account.thumbnailUrl,
                 description: account.description
             }
@@ -306,10 +307,11 @@ var EditAccountPage = (function () {
         var desc = r.get('description');
         this.accountDAO.update(this.app.currentAccount, name, organization, thumbnail, desc, function (e, account) {
             if (e != null) {
-                alert(e);
+                _this.app.addSnack(e);
                 return;
             }
             _this.app.currentAccount = account;
+            _this.app.addSnack('Done!');
         });
     };
     return EditAccountPage;
@@ -359,6 +361,7 @@ var EditCompanyPage = (function () {
         this.app.showBackButton();
     };
     EditCompanyPage.prototype.update = function () {
+        var _this = this;
         var r = this.ractive;
         var name = r.get('name');
         var url = r.get('url');
@@ -366,24 +369,27 @@ var EditCompanyPage = (function () {
         var desc = r.get('description');
         this.companyDAO.update(this.company, name, url, thumbnail, desc, function (e, company) {
             if (e != null) {
-                alert(e);
+                _this.app.addSnack(e);
                 return;
             }
+            _this.app.addSnack('Done!');
         });
     };
     EditCompanyPage.prototype.addMember = function () {
+        var _this = this;
         var r = this.ractive;
         var name = r.get('newName');
         var email = r.get('newEmail');
         var password = r.get('newPassword');
         this.companyDAO.addMember(this.company, name, email, password, function (e, company) {
             if (e != null) {
-                alert(e);
+                _this.app.addSnack(e);
                 return;
             }
             r.set('newName', '');
             r.set('newEmail', '');
             r.set('newPassword', '');
+            _this.app.addSnack('Done!');
         });
     };
     return EditCompanyPage;
@@ -761,6 +767,7 @@ var Application = (function () {
             }
         });
         this.initDrawer();
+        this.initSnack();
     };
     Application.prototype.initDrawer = function () {
         var _this = this;
@@ -825,6 +832,33 @@ var Application = (function () {
         KiiUser.logOut();
         this.currentAccount = null;
         this.navigate('/');
+    };
+    Application.prototype.initSnack = function () {
+        this.snack = new Ractive({
+            el: '#snack',
+            template: '#snackTemplate',
+            data: {
+                msgList: []
+            }
+        });
+        //this.drawer.on({ });
+    };
+    Application.prototype.addSnack = function (msg) {
+        var _this = this;
+        this.snack.push('msgList', msg);
+        if (this.clearSnack != null) {
+            return;
+        }
+        this.clearSnack = function () {
+            _this.snack.splice('msgList', 0, 1);
+            if (_this.snack.get('msgList').length == 0) {
+                _this.clearSnack = null;
+            }
+            else {
+                setTimeout(_this.clearSnack, 3000);
+            }
+        };
+        setTimeout(this.clearSnack, 3000);
     };
     Application.prototype.setDrawerEnabled = function (value) {
         this.header.set('navDrawerEnabled', value);

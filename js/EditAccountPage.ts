@@ -19,6 +19,7 @@ class EditAccountPage implements Page {
             template : '#EditAccountTemplate',
             data : {
                 name : account.name,
+                organization : account.organization,
                 thumbnailUrl : account.thumbnailUrl,
                 description : account.description,
             }
@@ -40,10 +41,11 @@ class EditAccountPage implements Page {
         var desc = r.get('description');
         this.accountDAO.update(this.app.currentAccount, name, organization, thumbnail, desc, (e : any, account : Account) => {
             if (e != null) {
-                alert(e);
+                this.app.addSnack(e);
                 return;
             }
             this.app.currentAccount = account;
+            this.app.addSnack('Done!');
         });
     }
 }
