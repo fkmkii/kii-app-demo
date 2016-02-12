@@ -22,6 +22,23 @@ var TopPage = (function () {
     };
     TopPage.prototype.onCreate = function () {
         var _this = this;
+        var token = localStorage.getItem('token');
+        if (token == null || token.length == 0) {
+            this.onCreateView();
+            return;
+        }
+        // login with token
+        this.accountDAO.loginWithStoredToken(function (e, account, companyList) {
+            if (e != null) {
+                _this.onCreateView();
+                return;
+            }
+            _this.app.setCurrentAccount(account, companyList);
+            _this.app.navigate('/conferences');
+        });
+    };
+    TopPage.prototype.onCreateView = function () {
+        var _this = this;
         this.ractive = new Ractive({
             el: '#container',
             template: '#TopTemplate'
@@ -392,7 +409,7 @@ var AccountDAOImpl = (function () {
     AccountDAOImpl.prototype.loginWithStoredToken = function (callback) {
         var _this = this;
         var token = localStorage.getItem('token');
-        if (token == null) {
+        if (token == null || token.length == 0) {
             callback('stored token not found', null, null);
             return;
         }
@@ -771,6 +788,10 @@ var Application = (function () {
             companyClicked: function (e, company) {
                 _this.closeDrawer();
                 _this.navigate('/companies/' + company.id + '/edit');
+            },
+            logout: function () {
+                _this.closeDrawer();
+                _this.logout();
             }
         });
     };
@@ -798,6 +819,12 @@ var Application = (function () {
     };
     Application.prototype.navigate = function (path) {
         this.router.navigate(path, { trigger: true });
+    };
+    Application.prototype.logout = function () {
+        localStorage.setItem('token', '');
+        KiiUser.logOut();
+        this.currentAccount = null;
+        this.navigate('/');
     };
     Application.prototype.setDrawerEnabled = function (value) {
         this.header.set('navDrawerEnabled', value);
