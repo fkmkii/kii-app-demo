@@ -294,6 +294,9 @@ var EditAccountPage = (function () {
             updateBasic: function () {
                 _this.updateBasic();
             },
+            updateEmail: function () {
+                _this.updateEmail();
+            },
             changePassword: function () {
                 _this.changePassword();
             }
@@ -314,6 +317,20 @@ var EditAccountPage = (function () {
                 return;
             }
             _this.app.currentAccount = account;
+            _this.app.addSnack('Done!');
+        });
+    };
+    EditAccountPage.prototype.updateEmail = function () {
+        var _this = this;
+        var r = this.ractive;
+        var email = r.get('newEmail');
+        this.accountDAO.changeEmail(email, function (e) {
+            if (e != null) {
+                _this.app.addSnack(e);
+                return;
+            }
+            r.set('newEmail', '');
+            _this.app.currentAccount.email = email;
             _this.app.addSnack('Done!');
         });
     };
@@ -577,6 +594,17 @@ var AccountDAOImpl = (function () {
                 callback(error, account);
             }
         }, true);
+    };
+    AccountDAOImpl.prototype.changeEmail = function (email, callback) {
+        var user = KiiUser.getCurrentUser();
+        user.changeEmail(email, {
+            success: function (u) {
+                callback(null);
+            },
+            failure: function (u, error) {
+                callback(error);
+            }
+        });
     };
     AccountDAOImpl.prototype.changePassword = function (oldPass, newPass, callback) {
         var user = KiiUser.getCurrentUser();
@@ -871,7 +899,6 @@ var Application = (function () {
                 msgList: []
             }
         });
-        //this.drawer.on({ });
     };
     Application.prototype.addSnack = function (msg) {
         var _this = this;
