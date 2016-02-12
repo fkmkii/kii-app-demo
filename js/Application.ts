@@ -53,6 +53,10 @@ class Application {
             companyClicked : (e : any, company : Company) => {
                 this.closeDrawer();
                 this.navigate('/companies/' + company.id + '/edit');
+            },
+            logout : () => {
+                this.closeDrawer();
+                this.logout();
             }
         });
     }
@@ -79,10 +83,17 @@ class Application {
             this.navigate('/company/edit');
             break;
         }
-    }
+    }    
    
     navigate(path : string) {
         this.router.navigate(path, {trigger: true});
+    }
+
+    private logout() {
+        localStorage.setItem('token', '');
+        KiiUser.logOut();
+        this.currentAccount = null;
+        this.navigate('/');
     }
 
     setDrawerEnabled(value : boolean) {

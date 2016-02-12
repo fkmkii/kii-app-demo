@@ -25,7 +25,7 @@ class AccountDAOImpl implements AccountDAO {
 
     loginWithStoredToken(callback : (e : any, account : Account, companyList : Array<Company>) => void) {
         var token = localStorage.getItem('token');
-        if (token == null) {
+        if (token == null || token.length == 0) {
             callback('stored token not found', null, null);
             return;
         }
