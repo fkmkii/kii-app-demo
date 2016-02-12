@@ -93,7 +93,7 @@ class Application {
         this.router.navigate(path, {trigger: true});
     }
 
-    private logout() {
+    logout() {
         localStorage.setItem('token', '');
         KiiUser.logOut();
         this.currentAccount = null;
@@ -108,7 +108,6 @@ class Application {
                 msgList : [],
             }
         });
-        //this.drawer.on({ });
     }
 
     addSnack(msg : string) {

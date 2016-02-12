@@ -148,6 +148,15 @@
         <li><label>Email</label><input type="text"/></li>
       </ul>
     </section>
+
+    <section class="EditAccount card-2">
+      <h2>Change password</h2>
+      <ul>
+        <li><label>Current</label><input type="password" value="{{oldPass}}"/></li>
+        <li><label>New</label><input type="password" value="{{newPass}}"/></li>
+      </ul>
+      <div class="button-submit"><label class="button-primary" on-click="changePassword">Update</label></div>
+    </section>
   </script>
 
   <script id="EditCompanyTemplate" type="text/ractive">
