@@ -1,5 +1,6 @@
 $color-primary:#f69627;
 $color-background:#ffffff;
+$color-snackbar: #323232;
 $color-white: #ffffff;
 $color-light-gray: #f7f7f7;
 $color-dark-gray: #777777;
@@ -145,6 +146,21 @@ body {
 #menu-checkbox:checked ~ #header #three-lines {
   position: relative;
   left: -3px;
+}
+
+/* Snackbar */
+#snack {
+    position : fixed;
+    left : 16px;
+    bottom : 16px;
+    ul {
+        padding : 4px 8px;
+        list-style : none;
+        background-color : $color-snackbar; 
+        li {
+            color : $color-white;
+        }
+    }
 }
 
 /* Common */

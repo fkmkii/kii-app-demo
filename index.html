@@ -12,6 +12,7 @@
   <label for="menu-checkbox" id="overlay"></label>
   <section id="header"></section>
   <section id="container"></section>
+  <section id="snack"></section>
 
   <script id="headerTemplate" type="text/ractive">
     {{#if navDrawerEnabled}}
@@ -37,12 +38,22 @@
     </ul>
     <hr/>
     <ul id="menu-list">
-    {{#companyList:i}}
-      <li on-click="companyClicked:{{i}}">{{.}}</li>
+    {{#companyList}}
+      <li on-click="companyClicked:{{.}}">{{name}}</li>
     {{/}}
     </ul>
     <hr/>
-    <button class="button-logout">Log out</button>
+    <button class="button-logout" on-click="logout">Log out</button>
+  </script>
+
+  <script id="snackTemplate" type="text/ractive">
+    {{#if msgList.length > 0}}
+    <ul>
+      {{#msgList:i}}
+      <li>{{.}}</li>
+      {{/}}
+    </ul>
+    {{/if}}
   </script>
 
   <script id="TopTemplate" type="text/ractive">
@@ -76,21 +87,21 @@
 
   <script id="CompanyDetailTemplate" type="text/ractive">
     <section class="CompanyDetail card-2">
-      <img class="thumbnail" src="{{company.thumbnail}}"/>
+      <img class="thumbnail" src="{{company.thumbnailUrl}}"/>
       <h2 class="name">{{company.name}}</h2>
       <p class="url">{{company.url}}</p>
-      <p class="desc">{{company.desc}}</p>
+      <p class="desc">{{company.description}}</p>
     </section>
 
     <section class="card-2">
       <h2>Members</h2>
       <table class="members">
         <thead>
-          <tr><th class="name-col">Name</th><th class="name-col">Orgzanization</th><th>Email</th></tr>
+          <tr><th class="name-col">Name</th><th>Orgzanization</th></tr>
         </thead>
         <tbody>
           {{#memberList}}
-          <tr on-click="memberClicked:{{.}}"><td>{{name}}</td><td>{{organization}}</td><td>{{email}}</td></tr>
+          <tr on-click="memberClicked:{{.}}"><td>{{name}}</td><td>{{organization}}</td></tr>
           {{/}}
         </tbody>
       </table>
@@ -137,9 +148,41 @@
         <li><label>Email</label><input type="text"/></li>
       </ul>
     </section>
+
+    <section class="EditAccount card-2">
+      <h2>Change password</h2>
+      <ul>
+        <li><label>Current</label><input type="password" value="{{oldPass}}"/></li>
+        <li><label>New</label><input type="password" value="{{newPass}}"/></li>
+      </ul>
+      <div class="button-submit"><label class="button-primary" on-click="changePassword">Update</label></div>
+    </section>
+  </script>
+
+  <script id="EditCompanyTemplate" type="text/ractive">
+    <section class="EditAccount card-2">
+      <h2>Basic information</h2>
+      <ul>
+        <li><label>Name</label><input type="text" value="{{name}}"/></li>
+        <li><label>URL</label><input type="text" value="{{url}}"/></li>
+        <li><label>Thumbnail URL</label><input type="text" value="{{thumbnailUrl}}"/></li>
+        <li><label>Description</label><textarea value="{{description}}"></textarea></li>
+      </ul>
+      <div class="button-submit"><label class="button-primary" on-click="updateInfo">Update</label></div>
+    </section>
+
+    <section class="EditAccount card-2">
+      <h2>Add member</h2>
+      <ul>
+        <li><label>Name</label><input type="text" value="{{newName}}"/></li>
+        <li><label>Email</label><input type="text" value="{{newEmail}}"/></li>
+        <li><label>Password</label><input type="password" value="{{newPassword}}"/></li>
+      </ul>
+      <div class="button-submit"><label class="button-primary" on-click="addMember">Add</label></div>
+    </section>
   </script>
   
-  <script id="EditCompanyTemplate" type="text/ractive">
+  <script id="" type="text/ractive">
     <section class="card-2">
     </section>
   </script>

@@ -4,6 +4,13 @@ var Account = (function () {
     return Account;
 })();
 ///<reference path="./Account.ts"/>
+var Company = (function () {
+    function Company() {
+    }
+    return Company;
+})();
+///<reference path="./Account.ts"/>
+///<reference path="./Company.ts"/>
 ///<reference path="./AccountDAO.ts"/>
 var TopPage = (function () {
     function TopPage(app, accountDAO) {
@@ -14,6 +21,23 @@ var TopPage = (function () {
         return false;
     };
     TopPage.prototype.onCreate = function () {
+        var _this = this;
+        var token = localStorage.getItem('token');
+        if (token == null || token.length == 0) {
+            this.onCreateView();
+            return;
+        }
+        // login with token
+        this.accountDAO.loginWithStoredToken(function (e, account, companyList) {
+            if (e != null) {
+                _this.onCreateView();
+                return;
+            }
+            _this.app.setCurrentAccount(account, companyList);
+            _this.app.navigate('/conferences');
+        });
+    };
+    TopPage.prototype.onCreateView = function () {
         var _this = this;
         this.ractive = new Ractive({
             el: '#container',
@@ -30,12 +54,12 @@ var TopPage = (function () {
         var _this = this;
         var email = this.ractive.get('email');
         var password = this.ractive.get('password');
-        this.accountDAO.login(email, password, function (e, account) {
+        this.accountDAO.login(email, password, function (e, account, companyList) {
             if (e != null) {
-                alert(e);
+                _this.app.addSnack(e);
                 return;
             }
-            _this.app.setCurrentAccount(account);
+            _this.app.setCurrentAccount(account, companyList);
             _this.app.navigate('/conferences');
         });
     };
@@ -65,12 +89,6 @@ var ConferenceListPage = (function () {
         this.app.setTitle('カンファレンス');
     };
     return ConferenceListPage;
-})();
-///<reference path="./Account.ts"/>
-var Company = (function () {
-    function Company() {
-    }
-    return Company;
 })();
 ///<reference path="./Company.ts"/>
 ///<reference path="./CompanyDAO.ts"/>
@@ -267,6 +285,7 @@ var EditAccountPage = (function () {
             template: '#EditAccountTemplate',
             data: {
                 name: account.name,
+                organization: account.organization,
                 thumbnailUrl: account.thumbnailUrl,
                 description: account.description
             }
@@ -274,6 +293,9 @@ var EditAccountPage = (function () {
         this.ractive.on({
             updateBasic: function () {
                 _this.updateBasic();
+            },
+            changePassword: function () {
+                _this.changePassword();
             }
         });
         this.app.setDrawerEnabled(false);
@@ -288,18 +310,115 @@ var EditAccountPage = (function () {
         var desc = r.get('description');
         this.accountDAO.update(this.app.currentAccount, name, organization, thumbnail, desc, function (e, account) {
             if (e != null) {
-                alert(e);
+                _this.app.addSnack(e);
                 return;
             }
             _this.app.currentAccount = account;
+            _this.app.addSnack('Done!');
+        });
+    };
+    EditAccountPage.prototype.changePassword = function () {
+        var _this = this;
+        var r = this.ractive;
+        var oldPass = r.get('oldPass');
+        var newPass = r.get('newPass');
+        this.accountDAO.changePassword(oldPass, newPass, function (e) {
+            if (e != null) {
+                _this.app.addSnack(e);
+                return;
+            }
+            r.set('oldPass', '');
+            r.set('newPass', '');
+            _this.app.addSnack('Done!');
+            _this.app.logout();
         });
     };
     return EditAccountPage;
 })();
+///<reference path="./CompanyDAO.ts"/>
+var EditCompanyPage = (function () {
+    function EditCompanyPage(app, id, companyDAO) {
+        this.app = app;
+        this.id = id;
+        this.companyDAO = companyDAO;
+    }
+    EditCompanyPage.prototype.loginRequired = function () {
+        return true;
+    };
+    EditCompanyPage.prototype.onCreate = function () {
+        var _this = this;
+        this.companyDAO.getById(this.id, function (e, company) {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            _this.company = company;
+            _this.onCreateView();
+        });
+    };
+    EditCompanyPage.prototype.onCreateView = function () {
+        var _this = this;
+        this.ractive = new Ractive({
+            el: '#container',
+            template: '#EditCompanyTemplate',
+            data: {
+                name: this.company.name,
+                url: this.company.url,
+                thumbnailUrl: this.company.thumbnailUrl,
+                description: this.company.description
+            }
+        });
+        this.ractive.on({
+            updateInfo: function () {
+                _this.update();
+            },
+            addMember: function () {
+                _this.addMember();
+            }
+        });
+        this.app.setDrawerEnabled(false);
+        this.app.showBackButton();
+    };
+    EditCompanyPage.prototype.update = function () {
+        var _this = this;
+        var r = this.ractive;
+        var name = r.get('name');
+        var url = r.get('url');
+        var thumbnail = r.get('thumbnailUrl');
+        var desc = r.get('description');
+        this.companyDAO.update(this.company, name, url, thumbnail, desc, function (e, company) {
+            if (e != null) {
+                _this.app.addSnack(e);
+                return;
+            }
+            _this.app.addSnack('Done!');
+        });
+    };
+    EditCompanyPage.prototype.addMember = function () {
+        var _this = this;
+        var r = this.ractive;
+        var name = r.get('newName');
+        var email = r.get('newEmail');
+        var password = r.get('newPassword');
+        this.companyDAO.addMember(this.company, name, email, password, function (e, company) {
+            if (e != null) {
+                _this.app.addSnack(e);
+                return;
+            }
+            r.set('newName', '');
+            r.set('newEmail', '');
+            r.set('newPassword', '');
+            _this.app.addSnack('Done!');
+        });
+    };
+    return EditCompanyPage;
+})();
 ///<reference path="./AccountDAO.ts"/>
+///<reference path="./CompanyDAO.ts"/>
 ///<reference path="./kii-cloud.sdk.d.ts"/>
 var AccountDAOImpl = (function () {
-    function AccountDAOImpl() {
+    function AccountDAOImpl(companyDAO) {
+        this.companyDAO = companyDAO;
     }
     AccountDAOImpl.prototype.login = function (email, password, callback) {
         var _this = this;
@@ -308,15 +427,15 @@ var AccountDAOImpl = (function () {
                 _this.getData(user.getUUID(), callback);
             },
             failure: function (user, error) {
-                callback(error, user);
+                callback(error, null, null);
             }
         });
     };
     AccountDAOImpl.prototype.loginWithStoredToken = function (callback) {
         var _this = this;
         var token = localStorage.getItem('token');
-        if (token == null) {
-            callback('stored token not found', null);
+        if (token == null || token.length == 0) {
+            callback('stored token not found', null, null);
             return;
         }
         KiiUser.authenticateWithToken(token, {
@@ -324,7 +443,7 @@ var AccountDAOImpl = (function () {
                 _this.getData(user.getUUID(), callback);
             },
             failure: function (user, error) {
-                callback(error, null);
+                callback(error, null, null);
             }
         });
     };
@@ -345,21 +464,38 @@ var AccountDAOImpl = (function () {
                 _this.getCompany(id, callback);
             },
             failure: function (b, error) {
-                callback(error, null);
+                callback(error, null, null);
             }
         };
         bucket.executeQuery(query, queryCallback);
     };
     AccountDAOImpl.prototype.getCompany = function (id, callback) {
         var _this = this;
-        models.company.getAll(function (e, list) {
+        this.companyDAO.getAll(function (e, list) {
             if (e != null) {
-                callback(e, null);
+                callback(e, null, null);
                 return;
             }
-            // save access token
-            localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
-            callback(null, _this.cache[id]);
+            _this.getJoinedCompany(id, callback);
+        });
+    };
+    AccountDAOImpl.prototype.getJoinedCompany = function (id, callback) {
+        var _this = this;
+        var user = KiiUser.getCurrentUser();
+        user.memberOfGroups({
+            success: function (u, list) {
+                var companyList = [];
+                for (var i = 0; i < list.length; ++i) {
+                    var group = list[i];
+                    companyList.push(_this.companyDAO.getCacheById(group.getUUID()));
+                }
+                // save access token
+                localStorage.setItem('token', KiiUser.getCurrentUser().getAccessToken());
+                callback(null, _this.cache[id], companyList);
+            },
+            failure: function (u, error) {
+                callback(error, null, null);
+            }
         });
     };
     AccountDAOImpl.prototype.getAll = function (callback) {
@@ -442,6 +578,17 @@ var AccountDAOImpl = (function () {
             }
         }, true);
     };
+    AccountDAOImpl.prototype.changePassword = function (oldPass, newPass, callback) {
+        var user = KiiUser.getCurrentUser();
+        user.updatePassword(oldPass, newPass, {
+            success: function (u) {
+                callback(null);
+            },
+            failure: function (u, error) {
+                callback(error);
+            }
+        });
+    };
     AccountDAOImpl.prototype.toAccount = function (obj) {
         var a = new Account();
         a.id = obj.getUUID();
@@ -490,6 +637,12 @@ var CompanyDAOImpl = (function () {
             }
         };
         bucket.executeQuery(query, queryCallback);
+    };
+    CompanyDAOImpl.prototype.getCacheById = function (id) {
+        if (this.cache == null) {
+            return null;
+        }
+        return this.cache[id];
     };
     CompanyDAOImpl.prototype.getById = function (id, callback) {
         var _this = this;
@@ -543,12 +696,66 @@ var CompanyDAOImpl = (function () {
             callback(null, company);
         });
     };
+    CompanyDAOImpl.prototype.update = function (company, name, url, thumbnail, description, callback) {
+        var uri = 'kiicloud://buckets/company/objects/' + company.id;
+        var obj = KiiObject.objectWithURI(uri);
+        obj.set('name', name);
+        obj.set('url', url);
+        obj.set('thumbnail_url', thumbnail);
+        obj.set('desc', description);
+        obj.save({
+            success: function (o) {
+                company.name = name;
+                company.url = url;
+                company.thumbnailUrl = thumbnail;
+                company.description = description;
+                callback(null, company);
+            },
+            failure: function (o, error) {
+                callback(error, company);
+            }
+        }, true);
+    };
+    CompanyDAOImpl.prototype.addMember = function (company, name, email, password, callback) {
+        var entry = Kii.serverCodeEntry("createMember");
+        var params = {
+            groupId: company.id,
+            name: name,
+            email: email,
+            password: password
+        };
+        entry.execute(params, {
+            success: function (entry, args, result) {
+                var vals = result.getReturnedValue();
+                if (vals["returnedValue"].code == 0) {
+                    // clear member cache
+                    company.members = null;
+                    // add this user to cache
+                    var a = vals["returnedValue"].account;
+                    var account = new Account();
+                    account.id = a.id;
+                    account.name = a.name;
+                    account.organization = a.organization;
+                    account.thumbnailUrl = a.thumbnail_url;
+                    account.description = a.desc;
+                    models.account.cache[account.id] = account;
+                    callback(null, company);
+                }
+                else {
+                    callback('failed', null);
+                }
+            },
+            failure: function (entry, args, result, error) {
+                callback(error, null);
+            }
+        });
+    };
     CompanyDAOImpl.prototype.toCompany = function (obj) {
         var c = new Company();
         c.id = obj.getUUID();
         c.name = obj.get('name');
         c.url = obj.get('url');
-        c.thumbnail = obj.get('thumbnailUrl');
+        c.thumbnailUrl = obj.get('thumbnail_url');
         c.description = obj.get('desc');
         return c;
     };
@@ -590,6 +797,7 @@ var Application = (function () {
             }
         });
         this.initDrawer();
+        this.initSnack();
     };
     Application.prototype.initDrawer = function () {
         var _this = this;
@@ -613,6 +821,14 @@ var Application = (function () {
             menuClicked: function (e, index) {
                 _this.closeDrawer();
                 _this.showPage(index);
+            },
+            companyClicked: function (e, company) {
+                _this.closeDrawer();
+                _this.navigate('/companies/' + company.id + '/edit');
+            },
+            logout: function () {
+                _this.closeDrawer();
+                _this.logout();
             }
         });
     };
@@ -641,6 +857,39 @@ var Application = (function () {
     Application.prototype.navigate = function (path) {
         this.router.navigate(path, { trigger: true });
     };
+    Application.prototype.logout = function () {
+        localStorage.setItem('token', '');
+        KiiUser.logOut();
+        this.currentAccount = null;
+        this.navigate('/');
+    };
+    Application.prototype.initSnack = function () {
+        this.snack = new Ractive({
+            el: '#snack',
+            template: '#snackTemplate',
+            data: {
+                msgList: []
+            }
+        });
+        //this.drawer.on({ });
+    };
+    Application.prototype.addSnack = function (msg) {
+        var _this = this;
+        this.snack.push('msgList', msg);
+        if (this.clearSnack != null) {
+            return;
+        }
+        this.clearSnack = function () {
+            _this.snack.splice('msgList', 0, 1);
+            if (_this.snack.get('msgList').length == 0) {
+                _this.clearSnack = null;
+            }
+            else {
+                setTimeout(_this.clearSnack, 3000);
+            }
+        };
+        setTimeout(this.clearSnack, 3000);
+    };
     Application.prototype.setDrawerEnabled = function (value) {
         this.header.set('navDrawerEnabled', value);
         if (value) {
@@ -657,12 +906,13 @@ var Application = (function () {
         }
         this.header.set('title', value);
     };
-    Application.prototype.setCurrentAccount = function (account) {
+    Application.prototype.setCurrentAccount = function (account, companyList) {
         this.currentAccount = account;
         this.drawer.set('account', account);
         var itemList = this.drawer.get('menuItems');
         itemList[0] = account.name;
         this.drawer.set('menuItems', itemList);
+        this.drawer.set('companyList', companyList);
     };
     return Application;
 })();
@@ -675,6 +925,7 @@ var Application = (function () {
 /// <reference path="./MemberListPage.ts"/>
 /// <reference path="./MemberDetailPage.ts"/>
 /// <reference path="./EditAccountPage.ts"/>
+/// <reference path="./EditCompanyPage.ts"/>
 /// <reference path="./AccountDAOImpl.ts"/>
 /// <reference path="./CompanyDAOImpl.ts"/>
 /// <reference path="./Application.ts"/>
@@ -686,6 +937,7 @@ var AppRouter = Backbone.Router.extend({
         "conferences": "conferences",
         "companies": "companies",
         "companies(/:id)": "companyDetail",
+        "companies(/:id)/edit": "editCompany",
         "members": "members",
         "members(/:id)": "memberDetail",
         "account/edit": "editAccount"
@@ -711,6 +963,9 @@ var AppRouter = Backbone.Router.extend({
     editAccount: function () {
         this.setPage(new EditAccountPage(app, models.account));
     },
+    editCompany: function (id) {
+        this.setPage(new EditCompanyPage(app, id, models.company));
+    },
     setPage: function (page) {
         app.page = page;
         if (!page.loginRequired()) {
@@ -722,19 +977,19 @@ var AppRouter = Backbone.Router.extend({
             return;
         }
         // login with token
-        models.account.loginWithStoredToken(function (e, account) {
+        models.account.loginWithStoredToken(function (e, account, companyList) {
             if (e != null) {
                 app.navigate('/');
                 return;
             }
-            app.setCurrentAccount(account);
+            app.setCurrentAccount(account, companyList);
             page.onCreate();
         });
     }
 });
 $(function () {
-    models.account = new AccountDAOImpl();
     models.company = new CompanyDAOImpl();
+    models.account = new AccountDAOImpl(models.company);
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

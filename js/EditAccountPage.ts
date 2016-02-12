@@ -19,6 +19,7 @@ class EditAccountPage implements Page {
             template : '#EditAccountTemplate',
             data : {
                 name : account.name,
+                organization : account.organization,
                 thumbnailUrl : account.thumbnailUrl,
                 description : account.description,
             }
@@ -26,6 +27,9 @@ class EditAccountPage implements Page {
         this.ractive.on({
             updateBasic : () => {
                 this.updateBasic();
+            },
+            changePassword : () => {
+                this.changePassword();
             },
         });
         this.app.setDrawerEnabled(false);
@@ -40,10 +44,27 @@ class EditAccountPage implements Page {
         var desc = r.get('description');
         this.accountDAO.update(this.app.currentAccount, name, organization, thumbnail, desc, (e : any, account : Account) => {
             if (e != null) {
-                alert(e);
+                this.app.addSnack(e);
                 return;
             }
             this.app.currentAccount = account;
+            this.app.addSnack('Done!');
+        });
+    }
+
+    private changePassword() {
+        var r = this.ractive;
+        var oldPass = r.get('oldPass');
+        var newPass = r.get('newPass');
+        this.accountDAO.changePassword(oldPass, newPass, (e : any) => {
+            if (e != null) {
+                this.app.addSnack(e);
+                return;
+            }
+            r.set('oldPass', '');
+            r.set('newPass', '');
+            this.app.addSnack('Done!');            
+            this.app.logout();
         });
     }
 }

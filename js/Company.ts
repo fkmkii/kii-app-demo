@@ -4,7 +4,7 @@ class Company {
     id : string;
     name : string;
     url : string;
-    thumbnail : string;
+    thumbnailUrl : string;
     description : string;
 
     members : Array<Account>;

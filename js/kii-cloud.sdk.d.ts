@@ -4,7 +4,7 @@
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
 declare module KiiCloud {
-    interface Promise<T>{}
+    interface Promise<T>{then(f : any);}
 
     enum KiiACLAction {
         KiiACLBucketActionCreateObjects,

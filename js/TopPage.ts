@@ -15,6 +15,23 @@ class TopPage implements Page {
     }
     
     onCreate() {
+        var token = localStorage.getItem('token');
+        if (token == null || token.length == 0) {
+            this.onCreateView();
+            return;
+        }
+        // login with token
+        this.accountDAO.loginWithStoredToken((e : any, account : Account, companyList : Array<Company>) => {
+            if (e != null) {
+                this.onCreateView();
+                return;
+            }
+            this.app.setCurrentAccount(account, companyList);
+            this.app.navigate('/conferences');
+        });
+    }
+    
+    private onCreateView() {
         this.ractive = new Ractive({
             el : '#container',
             template : '#TopTemplate',
@@ -30,12 +47,12 @@ class TopPage implements Page {
     private login() {
         var email = this.ractive.get('email');
         var password = this.ractive.get('password');
-        this.accountDAO.login(email, password, (e : any, account : Account) => {
+        this.accountDAO.login(email, password, (e : any, account : Account, companyList : Array<Company>) => {
             if (e != null) {
-                alert(e);
+                this.app.addSnack(e);
                 return;
             }
-            this.app.setCurrentAccount(account);
+            this.app.setCurrentAccount(account, companyList);
             this.app.navigate('/conferences');
         });
     }
