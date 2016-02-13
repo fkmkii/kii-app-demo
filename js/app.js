@@ -65,24 +65,38 @@ var TopPage = (function () {
     };
     return TopPage;
 })();
+var Conference = (function () {
+    function Conference() {
+    }
+    return Conference;
+})();
+///<reference path="./Conference.ts"/>
+/// <reference path="./ConferenceDAO.ts"/>
 var ConferenceListPage = (function () {
-    function ConferenceListPage(app) {
+    function ConferenceListPage(app, conferenceDAO) {
         this.app = app;
+        this.conferenceDAO = conferenceDAO;
     }
     ConferenceListPage.prototype.loginRequired = function () {
-        return false;
+        return true;
     };
     ConferenceListPage.prototype.onCreate = function () {
-        var data = [
-            { 'title': '第3回カンファレンス', 'desc': '概要3' },
-            { 'title': '第2回カンファレンス', 'desc': '概要2' },
-            { 'title': '第1回カンファレンス', 'desc': '概要1' },
-        ];
+        var _this = this;
+        this.conferenceDAO.getAll(function (e, list) {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            _this.list = list;
+            _this.onCreateView();
+        });
+    };
+    ConferenceListPage.prototype.onCreateView = function () {
         this.ractive = new Ractive({
             el: '#container',
             template: '#ConferenceListTemplate',
             data: {
-                list: data
+                list: this.list
             }
         });
         this.app.setDrawerEnabled(true);
@@ -294,6 +308,9 @@ var EditAccountPage = (function () {
             updateBasic: function () {
                 _this.updateBasic();
             },
+            updateEmail: function () {
+                _this.updateEmail();
+            },
             changePassword: function () {
                 _this.changePassword();
             }
@@ -314,6 +331,20 @@ var EditAccountPage = (function () {
                 return;
             }
             _this.app.currentAccount = account;
+            _this.app.addSnack('Done!');
+        });
+    };
+    EditAccountPage.prototype.updateEmail = function () {
+        var _this = this;
+        var r = this.ractive;
+        var email = r.get('newEmail');
+        this.accountDAO.changeEmail(email, function (e) {
+            if (e != null) {
+                _this.app.addSnack(e);
+                return;
+            }
+            r.set('newEmail', '');
+            _this.app.currentAccount.email = email;
             _this.app.addSnack('Done!');
         });
     };
@@ -578,6 +609,17 @@ var AccountDAOImpl = (function () {
             }
         }, true);
     };
+    AccountDAOImpl.prototype.changeEmail = function (email, callback) {
+        var user = KiiUser.getCurrentUser();
+        user.changeEmail(email, {
+            success: function (u) {
+                callback(null);
+            },
+            failure: function (u, error) {
+                callback(error);
+            }
+        });
+    };
     AccountDAOImpl.prototype.changePassword = function (oldPass, newPass, callback) {
         var user = KiiUser.getCurrentUser();
         user.updatePassword(oldPass, newPass, {
@@ -774,6 +816,57 @@ var CompanyDAOImpl = (function () {
     };
     return CompanyDAOImpl;
 })();
+///<reference path="./ConferenceDAO.ts"/>
+var ConferenceDAOImpl = (function () {
+    function ConferenceDAOImpl() {
+    }
+    ConferenceDAOImpl.prototype.getAll = function (callback) {
+        var _this = this;
+        if (this.cache != null) {
+            callback(null, this.toArray());
+            return;
+        }
+        var bucket = Kii.bucketWithName('conference');
+        var query = new KiiQuery();
+        var resultList = [];
+        var queryCallback = {
+            success: function (q, result, next) {
+                if (_this.cache == null) {
+                    _this.cache = {};
+                }
+                for (var i = 0; i < result.length; ++i) {
+                    var c = _this.toConference(result[i]);
+                    _this.cache[c.id] = c;
+                }
+                callback(null, _this.toArray());
+            },
+            failure: function (b, error) {
+                callback(error, null);
+            }
+        };
+        bucket.executeQuery(query, queryCallback);
+    };
+    ConferenceDAOImpl.prototype.toConference = function (obj) {
+        var c = new Conference();
+        c.id = obj.getUUID();
+        c.title = obj.get('title');
+        c.date = obj.get('date');
+        var d = new Date(c.date);
+        c.dateLabel = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' +
+            d.getDate();
+        c.place = obj.get('place');
+        c.description = obj.get('desc');
+        return c;
+    };
+    ConferenceDAOImpl.prototype.toArray = function () {
+        var list = [];
+        for (var key in this.cache) {
+            list.push(this.cache[key]);
+        }
+        return list;
+    };
+    return ConferenceDAOImpl;
+})();
 ///<reference path="./Account.ts"/>
 ///<reference path="./kii-cloud.sdk.d.ts"/>
 var Application = (function () {
@@ -871,7 +964,6 @@ var Application = (function () {
                 msgList: []
             }
         });
-        //this.drawer.on({ });
     };
     Application.prototype.addSnack = function (msg) {
         var _this = this;
@@ -928,6 +1020,7 @@ var Application = (function () {
 /// <reference path="./EditCompanyPage.ts"/>
 /// <reference path="./AccountDAOImpl.ts"/>
 /// <reference path="./CompanyDAOImpl.ts"/>
+/// <reference path="./ConferenceDAOImpl.ts"/>
 /// <reference path="./Application.ts"/>
 var app = new Application();
 var models = {};
@@ -946,7 +1039,7 @@ var AppRouter = Backbone.Router.extend({
         this.setPage(new TopPage(app, models.account));
     },
     conferences: function () {
-        this.setPage(new ConferenceListPage(app));
+        this.setPage(new ConferenceListPage(app, models.conference));
     },
     companies: function () {
         this.setPage(new CompanyListPage(app, models.company));
@@ -990,6 +1083,7 @@ var AppRouter = Backbone.Router.extend({
 $(function () {
     models.company = new CompanyDAOImpl();
     models.account = new AccountDAOImpl(models.company);
+    models.conference = new ConferenceDAOImpl();
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

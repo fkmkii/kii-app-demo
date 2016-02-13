@@ -11,7 +11,11 @@
   <nav id="menu"></nav>
   <label for="menu-checkbox" id="overlay"></label>
   <section id="header"></section>
-  <section id="container"></section>
+  <section id="container">
+    <section id="loading">
+      <label>Loading...</label>
+    </section>
+  </section>
   <section id="snack"></section>
 
   <script id="headerTemplate" type="text/ractive">
@@ -67,7 +71,11 @@
   <script id="ConferenceListTemplate" type="text/ractive">
     <ul class="conference">
     {{#list}}
-      <li><h2>{{title}}</h2><p>{{desc}}</p></li>
+      <li>
+        <h2>{{title}}</h2>
+        <p>{{dateLabel}}</p>
+        <p>場所：{{place}}</p>
+        <p>{{description}}</p></li>
     {{/}}
     </ul>
   </script>
@@ -145,8 +153,9 @@
     <section class="EditAccount card-2">
       <h2>Email address</h2>
       <ul>
-        <li><label>Email</label><input type="text"/></li>
+        <li><label>Email</label><input type="text" value="{{newEmail}}"></li>
       </ul>
+      <div class="button-submit"><label class="button-primary" on-click="updateEmail">Update</label></div>
     </section>
 
     <section class="EditAccount card-2">

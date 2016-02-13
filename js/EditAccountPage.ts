@@ -28,6 +28,9 @@ class EditAccountPage implements Page {
             updateBasic : () => {
                 this.updateBasic();
             },
+            updateEmail : () => {
+                this.updateEmail();
+            },
             changePassword : () => {
                 this.changePassword();
             },
@@ -48,6 +51,20 @@ class EditAccountPage implements Page {
                 return;
             }
             this.app.currentAccount = account;
+            this.app.addSnack('Done!');
+        });
+    }
+
+    private updateEmail() {
+        var r = this.ractive;
+        var email = r.get('newEmail');
+        this.accountDAO.changeEmail(email, (e : any) => {
+            if (e != null) {
+                this.app.addSnack(e);
+                return;
+            }
+            r.set('newEmail', '');
+            this.app.currentAccount.email = email;
             this.app.addSnack('Done!');
         });
     }
