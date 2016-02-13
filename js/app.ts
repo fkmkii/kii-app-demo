@@ -11,6 +11,7 @@
 
 /// <reference path="./AccountDAOImpl.ts"/>
 /// <reference path="./CompanyDAOImpl.ts"/>
+/// <reference path="./ConferenceDAOImpl.ts"/>
 
 /// <reference path="./Application.ts"/>
 declare var $;
@@ -36,7 +37,7 @@ var AppRouter = Backbone.Router.extend({
         this.setPage(new TopPage(app, models.account));
     },
     conferences : function() {
-        this.setPage(new ConferenceListPage(app));
+        this.setPage(new ConferenceListPage(app, models.conference));
     },
     companies : function() {
         this.setPage(new CompanyListPage(app, models.company));
@@ -81,6 +82,7 @@ var AppRouter = Backbone.Router.extend({
 $(() => {
     models.company = new CompanyDAOImpl();
     models.account = new AccountDAOImpl(models.company);
+    models.conference = new ConferenceDAOImpl();
     app.start();
     app.router = new AppRouter();
     Backbone.history.start();

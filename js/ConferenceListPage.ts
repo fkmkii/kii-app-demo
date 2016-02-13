@@ -1,26 +1,38 @@
+/// <reference path="./ConferenceDAO.ts"/>
+
 class ConferenceListPage implements Page {
     app : Application;
+    conferenceDAO : ConferenceDAO;
     ractive : Ractive;
+
+    list : Array<Conference>;
     
-    constructor(app : Application) {
+    constructor(app : Application, conferenceDAO : ConferenceDAO) {
         this.app = app;
+        this.conferenceDAO = conferenceDAO;
     }
 
     loginRequired() : boolean {
-        return false;
+        return true;
     }
     
     onCreate() {
-        var data = [
-            {'title' : '第3回カンファレンス', 'desc':'概要3'},
-            {'title' : '第2回カンファレンス', 'desc':'概要2'},
-            {'title' : '第1回カンファレンス', 'desc':'概要1'},
-        ];
+        this.conferenceDAO.getAll((e : any, list : Array<Conference>) => {
+            if (e != null) {
+                window.history.back();
+                return;
+            }
+            this.list = list;
+            this.onCreateView();
+        });
+    }
+
+    private onCreateView() {
         this.ractive = new Ractive({
             el : '#container',
             template : '#ConferenceListTemplate',
             data : {
-                list : data
+                list : this.list,
             }
         });
         this.app.setDrawerEnabled(true);
